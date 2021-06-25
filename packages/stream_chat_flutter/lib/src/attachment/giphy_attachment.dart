@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:stream_chat_flutter/src/attachment/attachment_widget.dart';
+import 'package:stream_chat_flutter/src/attachment/only_visible_to_you.dart';
 import 'package:stream_chat_flutter/stream_chat_flutter.dart';
 import 'package:stream_chat_flutter_core/stream_chat_flutter_core.dart';
 
@@ -122,135 +123,103 @@ class GiphyAttachment extends AttachmentWidget {
                 width: double.infinity,
                 height: 0.5,
               ),
-              Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: 50,
-                      child: TextButton(
-                        onPressed: () {
-                          streamChannel.channel.sendAction(message, {
-                            'image_action': 'cancel',
-                          });
-                        },
-                        child: Text(
-                          'Cancel',
-                          style: StreamChatTheme.of(context)
-                              .textTheme
-                              .bodyBold
-                              .copyWith(
-                                color: StreamChatTheme.of(context)
-                                    .colorTheme
-                                    .black
-                                    .withOpacity(0.5),
-                              ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 0.5,
-                    color: StreamChatTheme.of(context)
-                        .colorTheme
-                        .black
-                        .withOpacity(0.2),
-                    height: 50,
-                  ),
-                  Expanded(
-                    child: SizedBox(
-                      height: 50,
-                      child: TextButton(
-                        onPressed: () {
-                          streamChannel.channel.sendAction(message, {
-                            'image_action': 'shuffle',
-                          });
-                        },
-                        child: Text(
-                          'Shuffle',
-                          style: StreamChatTheme.of(context)
-                              .textTheme
-                              .bodyBold
-                              .copyWith(
-                                color: StreamChatTheme.of(context)
-                                    .colorTheme
-                                    .black
-                                    .withOpacity(0.5),
-                              ),
-                          maxLines: 1,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 0.5,
-                    color: StreamChatTheme.of(context)
-                        .colorTheme
-                        .black
-                        .withOpacity(0.2),
-                    height: 50,
-                  ),
-                  Expanded(
-                    child: SizedBox(
-                      height: 50,
-                      child: TextButton(
-                        onPressed: () {
-                          streamChannel.channel.sendAction(message, {
-                            'image_action': 'send',
-                          });
-                        },
-                        child: Text(
-                          'Send',
-                          style: TextStyle(
-                            color: StreamChatTheme.of(context)
-                                .colorTheme
-                                .accentBlue,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              _buildBottomRow(streamChannel, context),
             ],
           ),
         ),
         const SizedBox(height: 4),
-        Align(
+        const Align(
           alignment: Alignment.centerRight,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                StreamSvgIcon.eye(
-                  color: StreamChatTheme.of(context)
-                      .colorTheme
-                      .black
-                      .withOpacity(0.5),
-                  size: 16,
-                ),
-                const SizedBox(
-                  width: 8,
-                ),
-                Text(
-                  'Only visible to you',
-                  style: StreamChatTheme.of(context)
-                      .textTheme
-                      .footnote
-                      .copyWith(
-                          color: StreamChatTheme.of(context)
-                              .colorTheme
-                              .black
-                              .withOpacity(0.5)),
-                ),
-              ],
-            ),
+            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: OnlyVisibleToYou(),
           ),
         ),
       ],
     );
   }
+
+  Row _buildBottomRow(StreamChannelState streamChannel, BuildContext context) =>
+      Row(
+        children: [
+          Expanded(
+            child: SizedBox(
+              height: 50,
+              child: TextButton(
+                onPressed: () {
+                  streamChannel.channel.sendAction(message, {
+                    'image_action': 'cancel',
+                  });
+                },
+                child: Text(
+                  'Cancel',
+                  style:
+                      StreamChatTheme.of(context).textTheme.bodyBold.copyWith(
+                            color: StreamChatTheme.of(context)
+                                .colorTheme
+                                .black
+                                .withOpacity(0.5),
+                          ),
+                ),
+              ),
+            ),
+          ),
+          Container(
+            width: 0.5,
+            color:
+                StreamChatTheme.of(context).colorTheme.black.withOpacity(0.2),
+            height: 50,
+          ),
+          Expanded(
+            child: SizedBox(
+              height: 50,
+              child: TextButton(
+                onPressed: () {
+                  streamChannel.channel.sendAction(message, {
+                    'image_action': 'shuffle',
+                  });
+                },
+                child: Text(
+                  'Shuffle',
+                  style:
+                      StreamChatTheme.of(context).textTheme.bodyBold.copyWith(
+                            color: StreamChatTheme.of(context)
+                                .colorTheme
+                                .black
+                                .withOpacity(0.5),
+                          ),
+                  maxLines: 1,
+                ),
+              ),
+            ),
+          ),
+          Container(
+            width: 0.5,
+            color:
+                StreamChatTheme.of(context).colorTheme.black.withOpacity(0.2),
+            height: 50,
+          ),
+          Expanded(
+            child: SizedBox(
+              height: 50,
+              child: TextButton(
+                onPressed: () {
+                  streamChannel.channel.sendAction(message, {
+                    'image_action': 'send',
+                  });
+                },
+                child: Text(
+                  'Send',
+                  style: TextStyle(
+                    color: StreamChatTheme.of(context).colorTheme.accentBlue,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
 
   void _onImageTap(BuildContext context) async {
     final res = await Navigator.push(

@@ -19,6 +19,7 @@ dependencies:
   stream_chat: ^2.0.0-nullsafety.6
 
 dev_dependencies:
+  dart_code_metrics: ^4.0.1
   fake_async: ^1.2.0
   flutter_test:
     sdk: flutter

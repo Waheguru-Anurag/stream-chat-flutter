@@ -44,77 +44,81 @@ class ImageAttachment extends AttachmentWidget {
 
   @override
   Widget build(BuildContext context) => source.when(
-        local: () {
-          if (attachment.localUri == null || attachment.file?.bytes == null) {
-            return AttachmentError(size: size);
-          }
-          return _buildImageAttachment(
-            context,
-            Image.memory(
-              attachment.file!.bytes!,
-              height: size?.height,
-              width: size?.width,
-              fit: BoxFit.cover,
-              errorBuilder: (context, _, __) => Image.asset(
-                'images/placeholder.png',
-                package: 'stream_chat_flutter',
-              ),
-            ),
-          );
-        },
-        network: () {
-          var imageUrl =
-              attachment.thumbUrl ?? attachment.imageUrl ?? attachment.assetUrl;
-
-          if (imageUrl == null) {
-            return AttachmentError(size: size);
-          }
-
-          var imageUri = Uri.parse(imageUrl);
-          if (imageUri.host == 'stream-io-cdn.com') {
-            imageUri = imageUri.replace(queryParameters: {
-              ...imageUri.queryParameters,
-              'h': '400',
-              'w': '400',
-              'crop': 'center',
-              'resize': 'crop',
-            });
-          } else if (imageUri.host == 'stream-cloud-uploads.imgix.net') {
-            imageUri = imageUri.replace(queryParameters: {
-              ...imageUri.queryParameters,
-              'height': '400',
-              'width': '400',
-              'fit': 'crop',
-            });
-          }
-          imageUrl = imageUri.toString();
-
-          return _buildImageAttachment(
-            context,
-            CachedNetworkImage(
-              cacheKey: imageUrl,
-              height: size?.height,
-              width: size?.width,
-              placeholder: (context, __) {
-                final image = Image.asset(
-                  'images/placeholder.png',
-                  fit: BoxFit.cover,
-                  package: 'stream_chat_flutter',
-                );
-                final colorTheme = StreamChatTheme.of(context).colorTheme;
-                return Shimmer.fromColors(
-                  baseColor: colorTheme.greyGainsboro,
-                  highlightColor: colorTheme.whiteSmoke,
-                  child: image,
-                );
-              },
-              imageUrl: imageUrl,
-              errorWidget: (context, url, error) => AttachmentError(size: size),
-              fit: BoxFit.cover,
-            ),
-          );
-        },
+        local: () => _buildLocal(context),
+        network: () => _buildNetwork(context),
       );
+
+  Widget _buildNetwork(BuildContext context) {
+    var imageUrl =
+        attachment.thumbUrl ?? attachment.imageUrl ?? attachment.assetUrl;
+
+    if (imageUrl == null) {
+      return AttachmentError(size: size);
+    }
+
+    var imageUri = Uri.parse(imageUrl);
+    if (imageUri.host == 'stream-io-cdn.com') {
+      imageUri = imageUri.replace(queryParameters: {
+        ...imageUri.queryParameters,
+        'h': '400',
+        'w': '400',
+        'crop': 'center',
+        'resize': 'crop',
+      });
+    } else if (imageUri.host == 'stream-cloud-uploads.imgix.net') {
+      imageUri = imageUri.replace(queryParameters: {
+        ...imageUri.queryParameters,
+        'height': '400',
+        'width': '400',
+        'fit': 'crop',
+      });
+    }
+    imageUrl = imageUri.toString();
+
+    return _buildImageAttachment(
+      context,
+      CachedNetworkImage(
+        cacheKey: imageUrl,
+        height: size?.height,
+        width: size?.width,
+        placeholder: (context, __) {
+          final image = Image.asset(
+            'images/placeholder.png',
+            fit: BoxFit.cover,
+            package: 'stream_chat_flutter',
+          );
+          final colorTheme = StreamChatTheme.of(context).colorTheme;
+          return Shimmer.fromColors(
+            baseColor: colorTheme.greyGainsboro,
+            highlightColor: colorTheme.whiteSmoke,
+            child: image,
+          );
+        },
+        imageUrl: imageUrl,
+        errorWidget: (context, url, error) => AttachmentError(size: size),
+        fit: BoxFit.cover,
+      ),
+    );
+  }
+
+  Widget _buildLocal(BuildContext context) {
+    if (attachment.localUri == null || attachment.file?.bytes == null) {
+      return AttachmentError(size: size);
+    }
+    return _buildImageAttachment(
+      context,
+      Image.memory(
+        attachment.file!.bytes!,
+        height: size?.height,
+        width: size?.width,
+        fit: BoxFit.cover,
+        errorBuilder: (context, _, __) => Image.asset(
+          'images/placeholder.png',
+          package: 'stream_chat_flutter',
+        ),
+      ),
+    );
+  }
 
   Widget _buildImageAttachment(BuildContext context, Widget imageWidget) =>
       ConstrainedBox(

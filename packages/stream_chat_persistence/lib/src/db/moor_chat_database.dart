@@ -1,6 +1,5 @@
 import 'package:moor/moor.dart';
 import 'package:stream_chat/stream_chat.dart';
-
 import 'package:stream_chat_persistence/src/converter/converter.dart';
 import 'package:stream_chat_persistence/src/dao/dao.dart';
 import 'package:stream_chat_persistence/src/entity/entity.dart';
@@ -10,27 +9,30 @@ export 'shared/shared_db.dart';
 part 'moor_chat_database.g.dart';
 
 /// A chat database implemented using moor
-@UseMoor(tables: [
-  Channels,
-  Messages,
-  PinnedMessages,
-  Reactions,
-  Users,
-  Members,
-  Reads,
-  ChannelQueries,
-  ConnectionEvents,
-], daos: [
-  UserDao,
-  ChannelDao,
-  MessageDao,
-  PinnedMessageDao,
-  MemberDao,
-  ReactionDao,
-  ReadDao,
-  ChannelQueryDao,
-  ConnectionEventDao,
-])
+@UseMoor(
+  tables: [
+    Channels,
+    Messages,
+    PinnedMessages,
+    Reactions,
+    Users,
+    Members,
+    Reads,
+    ChannelQueries,
+    ConnectionEvents,
+  ],
+  daos: [
+    UserDao,
+    ChannelDao,
+    MessageDao,
+    PinnedMessageDao,
+    MemberDao,
+    ReactionDao,
+    ReadDao,
+    ChannelQueryDao,
+    ConnectionEventDao,
+  ],
+)
 class MoorChatDatabase extends _$MoorChatDatabase {
   /// Creates a new moor chat database instance
   MoorChatDatabase(

@@ -7,6 +7,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_portal/flutter_portal.dart';
 import 'package:jiffy/jiffy.dart';
+import 'package:stream_chat_flutter/src/attachment/only_visible_to_you.dart';
 import 'package:stream_chat_flutter/src/extension.dart';
 import 'package:stream_chat_flutter/src/image_group.dart';
 import 'package:stream_chat_flutter/src/message_action.dart';
@@ -116,7 +117,6 @@ class MessageWidget extends StatefulWidget {
               return Padding(
                 padding: attachmentPadding,
                 child: wrapAttachmentWidget(
-                  context,
                   Material(
                     color: messageTheme.messageBackgroundColor,
                     child: ImageGroup(
@@ -132,13 +132,11 @@ class MessageWidget extends StatefulWidget {
                     ),
                   ),
                   border,
-                  reverse,
                 ),
               );
             }
 
             return wrapAttachmentWidget(
-              context,
               ImageAttachment(
                 attachment: attachments[0],
                 message: message,
@@ -156,7 +154,6 @@ class MessageWidget extends StatefulWidget {
                     : null,
               ),
               border,
-              reverse,
             );
           },
           'video': (context, message, attachments) {
@@ -165,7 +162,6 @@ class MessageWidget extends StatefulWidget {
             );
 
             return wrapAttachmentWidget(
-              context,
               Column(
                 children: attachments.map((attachment) {
                   final mediaQueryData = MediaQuery.of(context);
@@ -188,7 +184,6 @@ class MessageWidget extends StatefulWidget {
                 }).toList(),
               ),
               border,
-              reverse,
             );
           },
           'giphy': (context, message, attachments) {
@@ -197,7 +192,6 @@ class MessageWidget extends StatefulWidget {
             );
 
             return wrapAttachmentWidget(
-              context,
               Column(
                 children: attachments.map((attachment) {
                   final mediaQueryData = MediaQuery.of(context);
@@ -214,7 +208,6 @@ class MessageWidget extends StatefulWidget {
                 }).toList(),
               ),
               border,
-              reverse,
             );
           },
           'file': (context, message, attachments) {
@@ -231,7 +224,6 @@ class MessageWidget extends StatefulWidget {
                   .map<Widget>((attachment) {
                     final mediaQueryData = MediaQuery.of(context);
                     return wrapAttachmentWidget(
-                      context,
                       FileAttachment(
                         message: message,
                         attachment: attachment,
@@ -241,7 +233,6 @@ class MessageWidget extends StatefulWidget {
                         ),
                       ),
                       border,
-                      reverse,
                     );
                   })
                   .insertBetween(SizedBox(
@@ -528,7 +519,10 @@ class _MessageWidgetState extends State<MessageWidget>
                                   child: PortalEntry(
                                     portal: Container(
                                       transform: Matrix4.translationValues(
-                                          widget.reverse ? 12 : -12, 0, 0),
+                                        widget.reverse ? 12 : -12,
+                                        0,
+                                        0,
+                                      ),
                                       constraints: const BoxConstraints(
                                         maxWidth: 22 * 6.0,
                                       ),
@@ -558,13 +552,15 @@ class _MessageWidgetState extends State<MessageWidget>
                                               ? Container(
                                                   // ignore: lines_longer_than_80_chars
                                                   margin: EdgeInsets.symmetric(
-                                                      horizontal:
-                                                          // ignore: lines_longer_than_80_chars
-                                                          widget.showUserAvatar ==
-                                                                  // ignore: lines_longer_than_80_chars
-                                                                  DisplayWidget.gone
-                                                              ? 0
-                                                              : 4.0),
+                                                    horizontal:
+                                                        // ignore: lines_longer_than_80_chars
+                                                        widget.showUserAvatar ==
+                                                                // ignore: lines_longer_than_80_chars
+                                                                DisplayWidget
+                                                                    .gone
+                                                            ? 0
+                                                            : 4.0,
+                                                  ),
                                                   child: DeletedMessage(
                                                     borderRadiusGeometry: widget
                                                         .borderRadiusGeometry,
@@ -698,28 +694,17 @@ class _MessageWidgetState extends State<MessageWidget>
           : chatThemeData.ownMessageTheme,
       reverse: widget.reverse,
       padding: EdgeInsets.only(
-          right: 8, left: 8, top: 8, bottom: hasNonUrlAttachments ? 8 : 0),
+        right: 8,
+        left: 8,
+        top: 8,
+        bottom: hasNonUrlAttachments ? 8 : 0,
+      ),
     );
   }
 
   Widget get _bottomRow {
     if (isDeleted) {
-      final chatThemeData = _streamChatTheme;
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          StreamSvgIcon.eye(
-            color: chatThemeData.colorTheme.grey,
-            size: 16,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            'Only visible to you',
-            style: chatThemeData.textTheme.footnote
-                .copyWith(color: chatThemeData.colorTheme.grey),
-          ),
-        ],
-      );
+      return const OnlyVisibleToYou();
     }
 
     final children = <Widget>[];
@@ -781,21 +766,7 @@ class _MessageWidgetState extends State<MessageWidget>
       mainAxisAlignment:
           widget.reverse ? MainAxisAlignment.end : MainAxisAlignment.start,
       children: [
-        if (showThreadTail && !widget.reverse)
-          Container(
-            margin: EdgeInsets.only(
-              bottom: context.textScaleFactor *
-                  ((widget.messageTheme.replies?.fontSize ?? 1) / 2),
-            ),
-            child: CustomPaint(
-              size: const Size(16, 32) * context.textScaleFactor,
-              painter: _ThreadReplyPainter(
-                context: context,
-                color: widget.messageTheme.messageBorderColor,
-                reverse: widget.reverse,
-              ),
-            ),
-          ),
+        if (showThreadTail && !widget.reverse) _buildThreadTail(),
         ...children.map(
           (child) {
             Widget mappedChild = SizedBox(
@@ -808,24 +779,25 @@ class _MessageWidgetState extends State<MessageWidget>
             return mappedChild;
           },
         ),
-        if (showThreadTail && widget.reverse)
-          Container(
-            margin: EdgeInsets.only(
-              bottom: context.textScaleFactor *
-                  ((widget.messageTheme.replies?.fontSize ?? 1) / 2),
-            ),
-            child: CustomPaint(
-              size: const Size(16, 32) * context.textScaleFactor,
-              painter: _ThreadReplyPainter(
-                context: context,
-                color: widget.messageTheme.messageBorderColor,
-                reverse: widget.reverse,
-              ),
-            ),
-          ),
+        if (showThreadTail && widget.reverse) _buildThreadTail(),
       ].insertBetween(const SizedBox(width: 8)),
     );
   }
+
+  Container _buildThreadTail() => Container(
+        margin: EdgeInsets.only(
+          bottom: context.textScaleFactor *
+              ((widget.messageTheme.replies?.fontSize ?? 1) / 2),
+        ),
+        child: CustomPaint(
+          size: const Size(16, 32) * context.textScaleFactor,
+          painter: _ThreadReplyPainter(
+            context: context,
+            color: widget.messageTheme.messageBorderColor,
+            reverse: widget.reverse,
+          ),
+        ),
+      );
 
   Widget _buildUsername(Key usernameKey) {
     if (widget.usernameBuilder != null) {
@@ -906,53 +878,54 @@ class _MessageWidgetState extends State<MessageWidget>
     final channel = StreamChannel.of(context).channel;
 
     showDialog(
-        useRootNavigator: false,
-        context: context,
-        barrierColor: _streamChatTheme.colorTheme.overlay,
-        builder: (context) => StreamChannel(
-              channel: channel,
-              child: MessageActionsModal(
-                textBuilder: widget.textBuilder,
-                onCopyTap: (message) =>
-                    Clipboard.setData(ClipboardData(text: message.text)),
-                attachmentBorderRadiusGeometry:
-                    widget.attachmentBorderRadiusGeometry as BorderRadius?,
-                showUserAvatar:
-                    widget.message.user!.id == channel.client.state.user!.id
-                        ? DisplayWidget.gone
-                        : DisplayWidget.show,
-                messageTheme: widget.messageTheme,
-                messageShape: widget.shape ?? _getDefaultShape(context),
-                attachmentShape: widget.attachmentShape ??
-                    _getDefaultAttachmentShape(context),
-                reverse: widget.reverse,
-                showDeleteMessage: widget.showDeleteMessage || isDeleteFailed,
-                message: widget.message,
-                editMessageInputBuilder: widget.editMessageInputBuilder,
-                onReplyTap: widget.onReplyTap,
-                onThreadReplyTap: widget.onThreadTap,
-                showResendMessage: widget.showResendMessage &&
-                    (isSendFailed || isUpdateFailed),
-                showCopyMessage: widget.showCopyMessage &&
-                    !isFailedState &&
-                    widget.message.text?.trim().isNotEmpty == true,
-                showEditMessage: widget.showEditMessage &&
-                    !isDeleteFailed &&
-                    widget.message.attachments
-                            .any((element) => element.type == 'giphy') !=
-                        true,
-                showReactions: widget.showReactions,
-                showReplyMessage: widget.showReplyMessage &&
-                    !isFailedState &&
-                    widget.onReplyTap != null,
-                showThreadReplyMessage: widget.showThreadReplyMessage &&
-                    !isFailedState &&
-                    widget.onThreadTap != null,
-                showFlagButton: widget.showFlagButton,
-                showPinButton: widget.showPinButton,
-                customActions: widget.customActions,
-              ),
-            ));
+      useRootNavigator: false,
+      context: context,
+      barrierColor: _streamChatTheme.colorTheme.overlay,
+      builder: (context) => StreamChannel(
+        channel: channel,
+        child: MessageActionsModal(
+          textBuilder: widget.textBuilder,
+          onCopyTap: (message) =>
+              Clipboard.setData(ClipboardData(text: message.text)),
+          attachmentBorderRadiusGeometry:
+              widget.attachmentBorderRadiusGeometry as BorderRadius?,
+          showUserAvatar:
+              widget.message.user!.id == channel.client.state.user!.id
+                  ? DisplayWidget.gone
+                  : DisplayWidget.show,
+          messageTheme: widget.messageTheme,
+          messageShape: widget.shape ?? _getDefaultShape(),
+          attachmentShape:
+              widget.attachmentShape ?? _getDefaultAttachmentShape(),
+          reverse: widget.reverse,
+          showDeleteMessage: widget.showDeleteMessage || isDeleteFailed,
+          message: widget.message,
+          editMessageInputBuilder: widget.editMessageInputBuilder,
+          onReplyTap: widget.onReplyTap,
+          onThreadReplyTap: widget.onThreadTap,
+          showResendMessage:
+              widget.showResendMessage && (isSendFailed || isUpdateFailed),
+          showCopyMessage: widget.showCopyMessage &&
+              !isFailedState &&
+              widget.message.text?.trim().isNotEmpty == true,
+          showEditMessage: widget.showEditMessage &&
+              !isDeleteFailed &&
+              widget.message.attachments
+                      .any((element) => element.type == 'giphy') !=
+                  true,
+          showReactions: widget.showReactions,
+          showReplyMessage: widget.showReplyMessage &&
+              !isFailedState &&
+              widget.onReplyTap != null,
+          showThreadReplyMessage: widget.showThreadReplyMessage &&
+              !isFailedState &&
+              widget.onThreadTap != null,
+          showFlagButton: widget.showFlagButton,
+          showPinButton: widget.showPinButton,
+          customActions: widget.customActions,
+        ),
+      ),
+    );
   }
 
   void _showMessageReactionsModalBottomSheet(BuildContext context) {
@@ -973,9 +946,9 @@ class _MessageWidgetState extends State<MessageWidget>
                   : DisplayWidget.show,
           onUserAvatarTap: widget.onUserAvatarTap,
           messageTheme: widget.messageTheme,
-          messageShape: widget.shape ?? _getDefaultShape(context),
+          messageShape: widget.shape ?? _getDefaultShape(),
           attachmentShape:
-              widget.attachmentShape ?? _getDefaultAttachmentShape(context),
+              widget.attachmentShape ?? _getDefaultAttachmentShape(),
           reverse: widget.reverse,
           message: widget.message,
           showReactions: widget.showReactions,
@@ -984,7 +957,7 @@ class _MessageWidgetState extends State<MessageWidget>
     );
   }
 
-  ShapeBorder _getDefaultAttachmentShape(BuildContext context) {
+  ShapeBorder _getDefaultAttachmentShape() {
     final hasFiles =
         widget.message.attachments.any((it) => it.type == 'file') == true;
     return RoundedRectangleBorder(
@@ -998,7 +971,7 @@ class _MessageWidgetState extends State<MessageWidget>
     );
   }
 
-  ShapeBorder _getDefaultShape(BuildContext context) => RoundedRectangleBorder(
+  ShapeBorder _getDefaultShape() => RoundedRectangleBorder(
         side: widget.borderSide ??
             BorderSide(
               color: _streamChatTheme.colorTheme.greyWhisper,
@@ -1137,8 +1110,9 @@ class _MessageWidgetState extends State<MessageWidget>
                       ? widget.messageTheme.copyWith(
                           messageText:
                               widget.messageTheme.messageText!.copyWith(
-                          fontSize: 42,
-                        ))
+                            fontSize: 42,
+                          ),
+                        )
                       : widget.messageTheme,
                 ),
         ),
@@ -1169,7 +1143,7 @@ class _MessageWidgetState extends State<MessageWidget>
               fontSize: 13,
               fontWeight: FontWeight.w400,
             ),
-          )
+          ),
         ],
       ),
     );
@@ -1275,8 +1249,12 @@ class _ThreadReplyPainter extends CustomPainter {
 
     final path = Path()
       ..moveTo(reverse ? size.width : 0, 0)
-      ..quadraticBezierTo(reverse ? size.width : 0, size.height * 0.38,
-          reverse ? size.width : 0, size.height * 0.50)
+      ..quadraticBezierTo(
+        reverse ? size.width : 0,
+        size.height * 0.38,
+        reverse ? size.width : 0,
+        size.height * 0.50,
+      )
       ..quadraticBezierTo(
         reverse ? size.width : 0,
         size.height,

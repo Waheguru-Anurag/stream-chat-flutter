@@ -287,78 +287,84 @@ class Channel {
 
     client.logger.info('Found ${attachments.length} attachments');
 
-    void updateAttachment(Attachment attachment) {
-      final index =
-          message.attachments.indexWhere((it) => it.id == attachment.id);
-      if (index != -1) {
-        message.attachments[index] = attachment;
-        state?.addMessage(message);
-      }
-    }
-
-    return Future.wait(attachments.map((it) {
-      client.logger.info('Uploading ${it.id} attachment...');
-
-      final throttledUpdateAttachment = updateAttachment.throttled(
-        const Duration(milliseconds: 500),
-      );
-
-      void onSendProgress(int sent, int total) {
-        throttledUpdateAttachment([
-          it.copyWith(
-            uploadState: UploadState.inProgress(uploaded: sent, total: total),
-          ),
-        ]);
-      }
-
-      final isImage = it.type == 'image';
-      final cancelToken = CancelToken();
-      Future<String> future;
-      if (isImage) {
-        future = sendImage(
-          it.file!,
-          onSendProgress: onSendProgress,
-          cancelToken: cancelToken,
-        ).then((it) => it.file);
-      } else {
-        future = sendFile(
-          it.file!,
-          onSendProgress: onSendProgress,
-          cancelToken: cancelToken,
-        ).then((it) => it.file);
-      }
-      _cancelableAttachmentUploadRequest[it.id] = cancelToken;
-      return future.then((url) {
-        client.logger.info('Attachment ${it.id} uploaded successfully...');
-        if (isImage) {
-          updateAttachment(
-            it.copyWith(
-              imageUrl: url,
-              uploadState: const UploadState.success(),
-            ),
-          );
-        } else {
-          updateAttachment(
-            it.copyWith(
-              assetUrl: url,
-              uploadState: const UploadState.success(),
-            ),
-          );
-        }
-      }).catchError((e, stk) {
-        client.logger.severe('error uploading the attachment', e, stk);
-        updateAttachment(
-          it.copyWith(uploadState: UploadState.failed(error: e.toString())),
-        );
-      }).whenComplete(() {
-        throttledUpdateAttachment.cancel();
-        _cancelableAttachmentUploadRequest.remove(it.id);
-      });
-    })).whenComplete(() {
+    return Future.wait(attachments.map((it) => _uploadAttachment(it, message)))
+        .whenComplete(() {
       if (message.attachments.every((it) => it.uploadState.isSuccess)) {
         _messageAttachmentsUploadCompleter.remove(messageId)?.complete(message);
       }
     });
+  }
+
+  Future<void> _uploadAttachment(Attachment it, Message message) {
+    client.logger.info('Uploading ${it.id} attachment...');
+
+    final throttledUpdateAttachment = _updateAttachment.throttled(
+      const Duration(milliseconds: 500),
+    );
+
+    void onSendProgress(int sent, int total) {
+      throttledUpdateAttachment([
+        it.copyWith(
+          uploadState: UploadState.inProgress(uploaded: sent, total: total),
+        ),
+      ]);
+    }
+
+    final isImage = it.type == 'image';
+    final cancelToken = CancelToken();
+    Future<String> future;
+    if (isImage) {
+      future = sendImage(
+        it.file!,
+        onSendProgress: onSendProgress,
+        cancelToken: cancelToken,
+      ).then((it) => it.file);
+    } else {
+      future = sendFile(
+        it.file!,
+        onSendProgress: onSendProgress,
+        cancelToken: cancelToken,
+      ).then((it) => it.file);
+    }
+    _cancelableAttachmentUploadRequest[it.id] = cancelToken;
+    return future.then((url) {
+      client.logger.info('Attachment ${it.id} uploaded successfully...');
+      if (isImage) {
+        _updateAttachment(
+          message,
+          it.copyWith(
+            imageUrl: url,
+            uploadState: const UploadState.success(),
+          ),
+        );
+      } else {
+        _updateAttachment(
+          message,
+          it.copyWith(
+            assetUrl: url,
+            uploadState: const UploadState.success(),
+          ),
+        );
+      }
+    }).catchError((e, stk) {
+      client.logger.severe('error uploading the attachment', e, stk);
+      _updateAttachment(
+        message,
+        it.copyWith(uploadState: UploadState.failed(error: e.toString())),
+      );
+    }).whenComplete(() {
+      throttledUpdateAttachment.cancel();
+      _cancelableAttachmentUploadRequest.remove(it.id);
+    });
+  }
+
+  void _updateAttachment(Message message, Attachment attachment) {
+    final index =
+        message.attachments.indexWhere((it) => it.id == attachment.id);
+    if (index != -1) {
+      message.attachments[index] = attachment;
+      state?.addMessage(message);
+    }
   }
 
   /// Send a [message] to this channel.
@@ -715,16 +721,22 @@ class Channel {
       ..removeWhere((it) => it.userId != user!.id);
 
     final newMessage = message.copyWith(
-      reactionCounts: {...message.reactionCounts ?? <String, int>{}}
-        ..update(type, (value) {
-          if (enforceUnique) return value;
-          return value + 1;
-        }, ifAbsent: () => 1),
-      reactionScores: {...message.reactionScores ?? <String, int>{}}
-        ..update(type, (value) {
-          if (enforceUnique) return value;
-          return value + 1;
-        }, ifAbsent: () => 1),
+      reactionCounts: {...message.reactionCounts ?? <String, int>{}}..update(
+          type,
+          (value) {
+            if (enforceUnique) return value;
+            return value + 1;
+          },
+          ifAbsent: () => 1,
+        ),
+      reactionScores: {...message.reactionScores ?? <String, int>{}}..update(
+          type,
+          (value) {
+            if (enforceUnique) return value;
+            return value + 1;
+          },
+          ifAbsent: () => 1,
+        ),
       latestReactions: latestReactions,
       ownReactions: ownReactions,
     );
@@ -748,7 +760,9 @@ class Channel {
 
   /// Delete a reaction from this channel
   Future<EmptyResponse> deleteReaction(
-      Message message, Reaction reaction) async {
+    Message message,
+    Reaction reaction,
+  ) async {
     final type = reaction.type;
     final user = _client.state.user;
 
@@ -901,10 +915,13 @@ class Channel {
           );
           if (parentMessage != null) {
             state!.addMessage(parentMessage.copyWith(
-                replyCount: parentMessage.replyCount! - 1));
+              replyCount: parentMessage.replyCount! - 1,
+            ));
           }
-          state!.updateThreadInfo(oldMessage!.parentId!,
-              state!.threads[oldMessage.parentId!]!..remove(oldMessage));
+          state!.updateThreadInfo(
+            oldMessage!.parentId!,
+            state!.threads[oldMessage.parentId!]!..remove(oldMessage),
+          );
         }
       }
       await _client.chatPersistenceClient?.deleteMessageById(messageId);
@@ -1365,7 +1382,8 @@ class ChannelClientState {
       final user = e.user;
       updateChannelState(channelState.copyWith(
         members: List.from(
-            channelState.members..removeWhere((m) => m.userId == user!.id)),
+          channelState.members..removeWhere((m) => m.userId == user!.id),
+        ),
       ));
     }));
   }
@@ -1660,7 +1678,8 @@ class ChannelClientState {
       newThreads[parentId] = [
         ...newThreads[parentId]
                 ?.where(
-                    (newMessage) => !messages.any((m) => m.id == newMessage.id))
+                  (newMessage) => !messages.any((m) => m.id == newMessage.id),
+                )
                 .toList() ??
             [],
         ...messages,

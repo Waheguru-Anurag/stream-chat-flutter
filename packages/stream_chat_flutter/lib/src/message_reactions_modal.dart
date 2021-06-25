@@ -96,14 +96,15 @@ class MessageReactionsModal extends StatelessWidget {
                   (message.status == MessageSendingStatus.sent))
                 Align(
                   alignment: Alignment(
-                      user!.id == message.user!.id
-                          ? (divFactor >= 1.0
-                              ? -0.2 - shiftFactor
-                              : (1.2 - divFactor))
-                          : (divFactor >= 1.0
-                              ? 0.2 + shiftFactor
-                              : -(1.2 - divFactor)),
-                      0),
+                    user!.id == message.user!.id
+                        ? (divFactor >= 1.0
+                            ? -0.2 - shiftFactor
+                            : (1.2 - divFactor))
+                        : (divFactor >= 1.0
+                            ? 0.2 + shiftFactor
+                            : -(1.2 - divFactor)),
+                    0,
+                  ),
                   child: ReactionPicker(
                     message: message,
                   ),
@@ -149,7 +150,7 @@ class MessageReactionsModal extends StatelessWidget {
                   context,
                   user,
                 ),
-              ]
+              ],
             ],
           ),
         ),
@@ -239,7 +240,7 @@ class MessageReactionsModal extends StatelessWidget {
     return ConstrainedBox(
       constraints: BoxConstraints.loose(const Size(
         64,
-        98,
+        100,
       )),
       child: Column(
         mainAxisSize: MainAxisSize.min,

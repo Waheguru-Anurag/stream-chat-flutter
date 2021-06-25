@@ -38,7 +38,7 @@ class ChannelInfo extends StatelessWidget {
             case ConnectionStatus.connected:
               return _buildConnectedTitleState(context, data);
             case ConnectionStatus.connecting:
-              return _buildConnectingTitleState(context);
+              return _buildConnectingTitleState();
             case ConnectionStatus.disconnected:
               return _buildDisconnectedTitleState(context, client);
             default:
@@ -99,7 +99,7 @@ class ChannelInfo extends StatelessWidget {
     );
   }
 
-  Widget _buildConnectingTitleState(BuildContext context) => Row(
+  Widget _buildConnectingTitleState() => Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const SizedBox(

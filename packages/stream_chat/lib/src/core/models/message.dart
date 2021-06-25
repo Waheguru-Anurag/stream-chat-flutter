@@ -2,8 +2,8 @@ import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:stream_chat/src/core/models/attachment.dart';
 import 'package:stream_chat/src/core/models/reaction.dart';
-import 'package:stream_chat/src/core/util/serializer.dart';
 import 'package:stream_chat/src/core/models/user.dart';
+import 'package:stream_chat/src/core/util/serializer.dart';
 import 'package:uuid/uuid.dart';
 
 part 'message.g.dart';
@@ -80,7 +80,8 @@ class Message extends Equatable {
 
   /// Create a new instance from a json
   factory Message.fromJson(Map<String, dynamic> json) => _$MessageFromJson(
-      Serializer.moveToExtraDataFromRoot(json, topLevelFields));
+        Serializer.moveToExtraDataFromRoot(json, topLevelFields),
+      );
 
   /// The message ID. This is either created by Stream or set client side when
   /// the message is added.

@@ -78,7 +78,8 @@ class Messages extends Table {
 
   /// The channel cid of which this message is part of
   TextColumn get channelCid => text().nullable().customConstraint(
-      'NULLABLE REFERENCES channels(cid) ON DELETE CASCADE')();
+        'NULLABLE REFERENCES channels(cid) ON DELETE CASCADE',
+      )();
 
   /// Message custom extraData
   TextColumn get extraData => text().nullable().map(MapConverter<Object?>())();

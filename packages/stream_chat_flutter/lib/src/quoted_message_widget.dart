@@ -139,12 +139,14 @@ class QuotedMessageWidget extends StatelessWidget {
             messageTheme: isOnlyEmoji && _containsText
                 ? messageTheme.copyWith(
                     messageText: messageTheme.messageText?.copyWith(
-                    fontSize: 32,
-                  ))
+                      fontSize: 32,
+                    ),
+                  )
                 : messageTheme.copyWith(
                     messageText: messageTheme.messageText?.copyWith(
-                    fontSize: 12,
-                  )),
+                      fontSize: 12,
+                    ),
+                  ),
           ),
         ),
     ].insertBetween(const SizedBox(width: 8));
@@ -219,12 +221,12 @@ class QuotedMessageWidget extends StatelessWidget {
     return Material(
       clipBehavior: Clip.hardEdge,
       type: MaterialType.transparency,
-      shape: attachment.type == 'file' ? null : _getDefaultShape(context),
+      shape: attachment.type == 'file' ? null : _getDefaultShape(),
       child: child,
     );
   }
 
-  ShapeBorder _getDefaultShape(BuildContext context) => RoundedRectangleBorder(
+  ShapeBorder _getDefaultShape() => RoundedRectangleBorder(
         side: const BorderSide(width: 0, color: Colors.transparent),
         borderRadius: BorderRadius.circular(8),
       );
@@ -274,7 +276,8 @@ class QuotedMessageWidget extends StatelessWidget {
                   height: 32,
                   width: 32,
                   child: getFileTypeImage(
-                      attachment.extraData['mime_type'] as String?),
+                    attachment.extraData['mime_type'] as String?,
+                  ),
                 ),
           };
 

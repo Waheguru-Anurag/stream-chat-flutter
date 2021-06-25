@@ -29,10 +29,11 @@ class UserReactionDisplay extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: reactionToEmoji.keys.map((reactionType) {
-            final firstUserReaction = message.latestReactions!
-                .firstWhere((element) => element.type == reactionType,
-                    //ignore: unnecessary_parenthesis
-                    orElse: (() => null) as Reaction Function()?);
+            final firstUserReaction = message.latestReactions!.firstWhere(
+              (element) => element.type == reactionType,
+              //ignore: unnecessary_parenthesis
+              orElse: (() => null) as Reaction Function()?,
+            );
 
             if (firstUserReaction.user == null) {
               return IconButton(

@@ -226,7 +226,9 @@ class StreamChatClient {
   /// Connects the current user using the [tokenProvider] to fetch the token.
   /// It returns a [Future] that resolves when the connection is setup.
   Future<Event> connectUserWithProvider(
-          User user, TokenProvider tokenProvider) =>
+    User user,
+    TokenProvider tokenProvider,
+  ) =>
       _connectUser(user, provider: tokenProvider);
 
   /// Connects the current user with an anonymous id, this triggers a connection

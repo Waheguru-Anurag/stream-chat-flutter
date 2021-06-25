@@ -48,141 +48,147 @@ class AttachmentActionsModal extends StatelessWidget {
         child: _buildPage(context),
       );
 
-  Widget _buildPage(context) {
+  Widget _buildPage(BuildContext context) {
     final theme = StreamChatTheme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         const SizedBox(height: kToolbarHeight),
-        Padding(
+        Container(
           padding: const EdgeInsets.only(right: 8),
-          child: Container(
-            width: MediaQuery.of(context).size.width * 0.5,
-            clipBehavior: Clip.hardEdge,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: SizedBox(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
+          width: MediaQuery.of(context).size.width * 0.5,
+          clipBehavior: Clip.hardEdge,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: SizedBox(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildButton(
+                  context,
+                  'Reply',
+                  StreamSvgIcon.iconCurveLineLeftUp(
+                    size: 24,
+                    color: theme.colorTheme.grey,
+                  ),
+                  () {
+                    Navigator.pop(context, ReturnActionType.reply);
+                  },
+                ),
+                _buildButton(
+                  context,
+                  'Show in Chat',
+                  StreamSvgIcon.eye(
+                    size: 24,
+                    color: theme.colorTheme.black,
+                  ),
+                  onShowMessage,
+                ),
+                _buildButton(
+                  context,
+                  // ignore: lines_longer_than_80_chars
+                  'Save ${message.attachments[currentIndex].type == 'video' ? 'Video' : 'Image'}',
+                  StreamSvgIcon.iconSave(
+                    size: 24,
+                    color: theme.colorTheme.grey,
+                  ),
+                  () {
+                    _onSaveTap(context, theme);
+                  },
+                ),
+                if (StreamChat.of(context).user?.id == message.user?.id)
                   _buildButton(
                     context,
-                    'Reply',
-                    StreamSvgIcon.iconCurveLineLeftUp(
+                    'Delete',
+                    StreamSvgIcon.delete(
                       size: 24,
-                      color: theme.colorTheme.grey,
-                    ),
-                    () {
-                      Navigator.pop(context, ReturnActionType.reply);
-                    },
-                  ),
-                  _buildButton(
-                    context,
-                    'Show in Chat',
-                    StreamSvgIcon.eye(
-                      size: 24,
-                      color: theme.colorTheme.black,
-                    ),
-                    onShowMessage,
-                  ),
-                  _buildButton(
-                    context,
-                    // ignore: lines_longer_than_80_chars
-                    'Save ${message.attachments[currentIndex].type == 'video' ? 'Video' : 'Image'}',
-                    StreamSvgIcon.iconSave(
-                      size: 24,
-                      color: theme.colorTheme.grey,
-                    ),
-                    () {
-                      final attachment = message.attachments[currentIndex];
-                      final isImage = attachment.type == 'image';
-                      final Future<String?> Function(Attachment,
-                              {void Function(int, int) progressCallback})
-                          saveFile = fileDownloader ?? _downloadAttachment;
-                      final Future<String?> Function(Attachment,
-                              {void Function(int, int) progressCallback})
-                          saveImage = imageDownloader ?? _downloadAttachment;
-                      final downloader = isImage ? saveImage : saveFile;
-
-                      final progressNotifier =
-                          ValueNotifier<_DownloadProgress?>(
-                        _DownloadProgress.initial(),
-                      );
-
-                      downloader(
-                        attachment,
-                        progressCallback: (received, total) {
-                          progressNotifier.value = _DownloadProgress(
-                            total,
-                            received,
-                          );
-                        },
-                      ).catchError((e, stk) {
-                        progressNotifier.value = null;
-                      });
-
-                      // Closing attachment actions modal before opening
-                      // attachment download dialog
-                      Navigator.pop(context);
-
-                      showDialog(
-                        barrierDismissible: false,
-                        context: context,
-                        barrierColor: theme.colorTheme.overlay,
-                        builder: (context) => _buildDownloadProgressDialog(
-                          context,
-                          progressNotifier,
-                        ),
-                      );
-                    },
-                  ),
-                  if (StreamChat.of(context).user?.id == message.user?.id)
-                    _buildButton(
-                      context,
-                      'Delete',
-                      StreamSvgIcon.delete(
-                        size: 24,
-                        color: theme.colorTheme.accentRed,
-                      ),
-                      () {
-                        final channel = StreamChannel.of(context).channel;
-                        if (message.attachments.length > 1 ||
-                            message.text?.isNotEmpty == true) {
-                          final remainingAttachments = [...message.attachments]
-                            ..removeAt(currentIndex);
-                          channel.updateMessage(message.copyWith(
-                            attachments: remainingAttachments,
-                          ));
-                          Navigator.of(context)
-                            ..pop()
-                            ..maybePop();
-                        } else {
-                          channel.deleteMessage(message);
-                          Navigator.of(context)
-                            ..pop()
-                            ..maybePop();
-                        }
-                      },
                       color: theme.colorTheme.accentRed,
                     ),
-                ]
-                    .map<Widget>((e) => Align(
-                          alignment: Alignment.centerRight,
-                          child: e,
-                        ))
-                    .insertBetween(
-                      Container(
-                        height: 1,
-                        color: theme.colorTheme.greyWhisper,
-                      ),
+                    () {
+                      _onDeleteTap(context);
+                    },
+                    color: theme.colorTheme.accentRed,
+                  ),
+              ]
+                  .map<Widget>((e) => Align(
+                        alignment: Alignment.centerRight,
+                        child: e,
+                      ))
+                  .insertBetween(
+                    Container(
+                      height: 1,
+                      color: theme.colorTheme.greyWhisper,
                     ),
-              ),
+                  ),
             ),
           ),
-        )
+        ),
       ],
+    );
+  }
+
+  void _onDeleteTap(BuildContext context) {
+    final channel = StreamChannel.of(context).channel;
+    if (message.attachments.length > 1 || message.text?.isNotEmpty == true) {
+      final remainingAttachments = [...message.attachments]
+        ..removeAt(currentIndex);
+      channel.updateMessage(message.copyWith(
+        attachments: remainingAttachments,
+      ));
+      Navigator.of(context)
+        ..pop()
+        ..maybePop();
+    } else {
+      channel.deleteMessage(message);
+      Navigator.of(context)
+        ..pop()
+        ..maybePop();
+    }
+  }
+
+  void _onSaveTap(BuildContext context, StreamChatThemeData theme) {
+    final attachment = message.attachments[currentIndex];
+    final isImage = attachment.type == 'image';
+    final Future<String?> Function(
+      Attachment, {
+      void Function(int, int) progressCallback,
+    }) saveFile = fileDownloader ?? _downloadAttachment;
+    final Future<String?> Function(
+      Attachment, {
+      void Function(int, int) progressCallback,
+    }) saveImage = imageDownloader ?? _downloadAttachment;
+    final downloader = isImage ? saveImage : saveFile;
+
+    final progressNotifier = ValueNotifier<_DownloadProgress?>(
+      _DownloadProgress.initial(),
+    );
+
+    downloader(
+      attachment,
+      progressCallback: (received, total) {
+        progressNotifier.value = _DownloadProgress(
+          total,
+          received,
+        );
+      },
+    ).catchError((e, stk) {
+      progressNotifier.value = null;
+    });
+
+    // Closing attachment actions modal before opening
+    // attachment download dialog
+    Navigator.pop(context);
+
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      barrierColor: theme.colorTheme.overlay,
+      builder: (context) => _buildDownloadProgressDialog(
+        context,
+        progressNotifier,
+      ),
     );
   }
 

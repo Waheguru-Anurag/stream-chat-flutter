@@ -81,7 +81,9 @@ class MessageText extends StatelessWidget {
     message.mentionedUsers.map((u) => u.name).toSet().forEach((userName) {
       // ignore: parameter_assignments
       text = text.replaceAll(
-          '@$userName', '[@$userName](@${userName.replaceAll(' ', '')})');
+        '@$userName',
+        '[@$userName](@${userName.replaceAll(' ', '')})',
+      );
     });
     return text;
   }

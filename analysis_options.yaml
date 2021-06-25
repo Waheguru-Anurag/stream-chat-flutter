@@ -1,10 +1,13 @@
 analyzer:
+  plugins:
+    - dart_code_metrics
+
   exclude:
-    - packages/*/lib/**/*.g.dart
-    - packages/*/example/**
-    - packages/*/lib/src/emoji
-    - packages/*/lib/**/*.freezed.dart
-    - packages/*/test/**
+    - packages/*/lib/src/emoji/**
+    - '**.g.dart'
+    - '**/example/**'
+    - '**.freezed.dart'
+    - '**/test/**'
 
 linter:
   rules:
@@ -146,3 +149,34 @@ linter:
     - unnecessary_null_checks
     - tighten_type_of_initializing_formals
     - null_check_on_nullable_type_parameter
+
+dart_code_metrics:
+  anti-patterns:
+    - long-method
+  metrics:
+    maximum-nesting-level: 5
+    source-lines-of-code: 90
+#    cyclomatic-complexity: 20
+  metrics-exclude:
+    - packages/*/lib/src/emoji/**
+    - '**.g.dart'
+    - '**/example/**'
+    - '**.freezed.dart'
+    - '**/test/**'
+    - '**/models/**'
+  rules:
+#    - avoid-non-null-assertion
+    - avoid-unused-parameters
+    - no-equal-then-else
+#    - no-magic-number
+    - prefer-trailing-comma
+    - always-remove-listener
+    - avoid-unnecessary-setstate
+    - avoid-wrapping-in-padding
+#    - prefer-extracting-callbacks
+#    - member-ordering:
+#        alphabetize: true
+#        order:
+#          - constructors
+#          - public-fields
+#          - private-fields

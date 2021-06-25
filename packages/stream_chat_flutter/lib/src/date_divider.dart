@@ -33,11 +33,6 @@ class DateDivider extends StatelessWidget {
       Units.DAY,
     )) {
       dayInfo = createdAt.EEEE;
-    } else if (Jiffy(createdAt).isAfter(
-      Jiffy(now).subtract(years: 1),
-      Units.DAY,
-    )) {
-      dayInfo = createdAt.MMMd;
     } else {
       dayInfo = createdAt.MMMd;
     }

@@ -252,7 +252,7 @@ class _ChannelListViewState extends State<ChannelListView> {
             if (widget.separatorBuilder != null) {
               return widget.separatorBuilder!(context, index);
             }
-            return _separatorBuilder(context, index);
+            return _separatorBuilder(context);
           },
           itemBuilder: (context, index) =>
               _listItemBuilder(context, index, channels),
@@ -263,7 +263,7 @@ class _ChannelListViewState extends State<ChannelListView> {
     return child;
   }
 
-  Widget _buildEmptyWidget(BuildContext context) => LayoutBuilder(
+  Widget _buildEmptyWidget(BuildContext _) => LayoutBuilder(
         builder: (context, viewportConstraints) {
           final chatThemeData = StreamChatTheme.of(context);
           return SingleChildScrollView(
@@ -341,7 +341,7 @@ class _ChannelListViewState extends State<ChannelListView> {
                 if (widget.separatorBuilder != null) {
                   return widget.separatorBuilder!(context, i);
                 }
-                return _separatorBuilder(context, i);
+                return _separatorBuilder(context);
               }
             }
             return _buildLoadingItem(context);
@@ -349,105 +349,19 @@ class _ChannelListViewState extends State<ChannelListView> {
         ),
       );
 
-  Shimmer _buildLoadingItem(BuildContext context) {
+  Widget _buildLoadingItem(BuildContext context) {
     final chatThemeData = StreamChatTheme.of(context);
     if (widget.crossAxisCount > 1) {
-      return Shimmer.fromColors(
-        baseColor: chatThemeData.colorTheme.greyGainsboro,
-        highlightColor: chatThemeData.colorTheme.whiteSmoke,
-        child: Column(
-          children: [
-            const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                for (int i = 0; i < widget.crossAxisCount; i++)
-                  Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints.tightFor(
-                      height: 70,
-                      width: 70,
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(
-              height: 16,
-            ),
-          ],
-        ),
+      return _GridShimmer(
+        chatThemeData: chatThemeData,
+        crossAxisCount: widget.crossAxisCount,
       );
     } else {
-      return Shimmer.fromColors(
-        baseColor: chatThemeData.colorTheme.greyGainsboro,
-        highlightColor: chatThemeData.colorTheme.whiteSmoke,
-        child: ListTile(
-          leading: Container(
-            decoration: BoxDecoration(
-              color: chatThemeData.colorTheme.white,
-              shape: BoxShape.circle,
-            ),
-            constraints: const BoxConstraints.tightFor(
-              height: 40,
-              width: 40,
-            ),
-          ),
-          contentPadding: const EdgeInsets.only(
-            left: 8,
-            right: 8,
-          ),
-          title: Align(
-            alignment: Alignment.centerLeft,
-            child: Container(
-              decoration: BoxDecoration(
-                color: chatThemeData.colorTheme.white,
-                borderRadius: BorderRadius.circular(11),
-              ),
-              constraints: const BoxConstraints.tightFor(
-                height: 16,
-                width: 82,
-              ),
-            ),
-          ),
-          subtitle: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: chatThemeData.colorTheme.white,
-                      borderRadius: BorderRadius.circular(11),
-                    ),
-                    constraints: const BoxConstraints.expand(
-                      height: 16,
-                    ),
-                  ),
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.only(left: 16),
-                decoration: BoxDecoration(
-                  color: chatThemeData.colorTheme.white,
-                  borderRadius: BorderRadius.circular(11),
-                ),
-                constraints: const BoxConstraints.tightFor(
-                  height: 16,
-                  width: 42,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      return _ListShimmer(chatThemeData: chatThemeData);
     }
   }
 
-  Widget _buildErrorWidget(BuildContext context, Object error) => Center(
+  Widget _buildErrorWidget(BuildContext context, Object _) => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
@@ -505,64 +419,26 @@ class _ChannelListViewState extends State<ChannelListView> {
                 IconSlideAction(
                   color: backgroundColor,
                   icon: Icons.more_horiz,
-                  onTap: widget.onMoreDetailsPressed != null
-                      ? () {
-                          widget.onMoreDetailsPressed!(channel);
-                        }
-                      : () {
-                          showModalBottomSheet(
-                            clipBehavior: Clip.hardEdge,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(32),
-                                topRight: Radius.circular(32),
-                              ),
-                            ),
-                            context: context,
-                            builder: (context) => StreamChannel(
-                              channel: channel,
-                              child: ChannelBottomSheet(
-                                onViewInfoTap: () {
-                                  widget.onViewInfoTap?.call(channel);
-                                },
-                              ),
-                            ),
-                          );
-                        },
+                  onTap: _onMoreDetailsPressed(channel, context),
                 ),
                 if ([
                   'admin',
                   'owner',
                 ].contains(channel.state!.members
                     .firstWhereOrNull(
-                        (m) => m.userId == channel.client.state.user?.id)
+                      (m) => m.userId == channel.client.state.user?.id,
+                    )
                     ?.role))
                   IconSlideAction(
                     color: backgroundColor,
                     iconWidget: StreamSvgIcon.delete(
                       color: chatThemeData.colorTheme.accentRed,
                     ),
-                    onTap: widget.onDeletePressed != null
-                        ? () {
-                            widget.onDeletePressed!(channel);
-                          }
-                        : () async {
-                            final res = await showConfirmationDialog(
-                              context,
-                              title: 'Delete Conversation',
-                              okText: 'DELETE',
-                              question:
-                                  // ignore: lines_longer_than_80_chars
-                                  'Are you sure you want to delete this conversation?',
-                              cancelText: 'CANCEL',
-                              icon: StreamSvgIcon.delete(
-                                color: chatThemeData.colorTheme.accentRed,
-                              ),
-                            );
-                            if (res == true) {
-                              await channel.delete();
-                            }
-                          },
+                    onTap: _onDeletePressed(
+                      channel,
+                      context,
+                      chatThemeData,
+                    ),
                   ),
               ],
           child: DecoratedBox(
@@ -580,9 +456,62 @@ class _ChannelListViewState extends State<ChannelListView> {
         ),
       );
     } else {
-      return _buildQueryProgressIndicator(context, channelsBloc);
+      return _buildQueryProgressIndicator(channelsBloc);
     }
   }
+
+  VoidCallback _onDeletePressed(
+    Channel channel,
+    BuildContext context,
+    StreamChatThemeData chatThemeData,
+  ) =>
+      widget.onDeletePressed != null
+          ? () {
+              widget.onDeletePressed!(channel);
+            }
+          : () async {
+              final res = await showConfirmationDialog(
+                context,
+                title: 'Delete Conversation',
+                okText: 'DELETE',
+                question:
+                    // ignore: lines_longer_than_80_chars
+                    'Are you sure you want to delete this conversation?',
+                cancelText: 'CANCEL',
+                icon: StreamSvgIcon.delete(
+                  color: chatThemeData.colorTheme.accentRed,
+                ),
+              );
+              if (res == true) {
+                await channel.delete();
+              }
+            };
+
+  VoidCallback _onMoreDetailsPressed(Channel channel, BuildContext context) =>
+      widget.onMoreDetailsPressed != null
+          ? () {
+              widget.onMoreDetailsPressed!(channel);
+            }
+          : () {
+              showModalBottomSheet(
+                clipBehavior: Clip.hardEdge,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(32),
+                    topRight: Radius.circular(32),
+                  ),
+                ),
+                context: context,
+                builder: (context) => StreamChannel(
+                  channel: channel,
+                  child: ChannelBottomSheet(
+                    onViewInfoTap: () {
+                      widget.onViewInfoTap?.call(channel);
+                    },
+                  ),
+                ),
+              );
+            };
 
   ChannelTapCallback _getChannelTap(BuildContext context) {
     ChannelTapCallback onTap;
@@ -646,34 +575,32 @@ class _ChannelListViewState extends State<ChannelListView> {
   }
 
   Widget _buildQueryProgressIndicator(
-    context,
     ChannelsBlocState channelsProvider,
   ) =>
       BetterStreamBuilder<bool>(
-          stream: channelsProvider.queryChannelsLoading,
-          initialData: false,
-          errorBuilder: (context, err) => Container(
-                color: StreamChatTheme.of(context)
-                    .colorTheme
-                    .accentRed
-                    .withOpacity(.2),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Center(
-                    child: Text('Error loading channels'),
-                  ),
+        stream: channelsProvider.queryChannelsLoading,
+        initialData: false,
+        errorBuilder: (context, err) => Container(
+          color:
+              StreamChatTheme.of(context).colorTheme.accentRed.withOpacity(.2),
+          child: const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(
+              child: Text('Error loading channels'),
+            ),
+          ),
+        ),
+        builder: (context, data) => data
+            ? const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: CircularProgressIndicator(),
                 ),
-              ),
-          builder: (context, data) => data
-              ? const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: CircularProgressIndicator(),
-                  ),
-                )
-              : const Offstage());
+              )
+            : const Offstage(),
+      );
 
-  Widget _separatorBuilder(context, i) {
+  Widget _separatorBuilder(BuildContext context) {
     final effect = StreamChatTheme.of(context).colorTheme.borderBottom;
 
     return Container(
@@ -681,6 +608,121 @@ class _ChannelListViewState extends State<ChannelListView> {
       color: effect.color!.withOpacity(effect.alpha ?? 1.0),
     );
   }
+}
+
+class _ListShimmer extends StatelessWidget {
+  const _ListShimmer({
+    Key? key,
+    required this.chatThemeData,
+  }) : super(key: key);
+
+  final StreamChatThemeData chatThemeData;
+
+  @override
+  Widget build(BuildContext context) => Shimmer.fromColors(
+        baseColor: chatThemeData.colorTheme.greyGainsboro,
+        highlightColor: chatThemeData.colorTheme.whiteSmoke,
+        child: ListTile(
+          leading: Container(
+            decoration: BoxDecoration(
+              color: chatThemeData.colorTheme.white,
+              shape: BoxShape.circle,
+            ),
+            constraints: const BoxConstraints.tightFor(
+              height: 40,
+              width: 40,
+            ),
+          ),
+          contentPadding: const EdgeInsets.only(
+            left: 8,
+            right: 8,
+          ),
+          title: Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              decoration: BoxDecoration(
+                color: chatThemeData.colorTheme.white,
+                borderRadius: BorderRadius.circular(11),
+              ),
+              constraints: const BoxConstraints.tightFor(
+                height: 16,
+                width: 82,
+              ),
+            ),
+          ),
+          subtitle: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: chatThemeData.colorTheme.white,
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                    constraints: const BoxConstraints.expand(
+                      height: 16,
+                    ),
+                  ),
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.only(left: 16),
+                decoration: BoxDecoration(
+                  color: chatThemeData.colorTheme.white,
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                constraints: const BoxConstraints.tightFor(
+                  height: 16,
+                  width: 42,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+}
+
+class _GridShimmer extends StatelessWidget {
+  const _GridShimmer({
+    Key? key,
+    required this.chatThemeData,
+    required this.crossAxisCount,
+  }) : super(key: key);
+
+  final StreamChatThemeData chatThemeData;
+  final int crossAxisCount;
+
+  @override
+  Widget build(BuildContext context) => Shimmer.fromColors(
+        baseColor: chatThemeData.colorTheme.greyGainsboro,
+        highlightColor: chatThemeData.colorTheme.whiteSmoke,
+        child: Column(
+          children: [
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                for (int i = 0; i < crossAxisCount; i++)
+                  Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints.tightFor(
+                      height: 70,
+                      width: 70,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(
+              height: 16,
+            ),
+          ],
+        ),
+      );
 }
 
 /// Class for slidable action

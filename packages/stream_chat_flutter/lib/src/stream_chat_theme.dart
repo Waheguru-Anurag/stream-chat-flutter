@@ -211,7 +211,7 @@ class StreamChatThemeData {
   }
 
   /// Create theme from color and text theme
-  // ignore: prefer_constructors_over_static_methods
+  // ignore: prefer_constructors_over_static_methods, long-method
   static StreamChatThemeData fromColorAndTextTheme(
     ColorTheme colorTheme,
     TextTheme textTheme,
@@ -340,7 +340,11 @@ class StreamChatThemeData {
           ],
         ),
       ),
-      reactionIcons: [
+      reactionIcons: _defaultReactionIcons,
+    );
+  }
+
+  static List<ReactionIcon> get _defaultReactionIcons => [
         ReactionIcon(
           type: 'love',
           builder: (context, highlighted, size) {
@@ -401,9 +405,7 @@ class StreamChatThemeData {
             );
           },
         ),
-      ],
-    );
-  }
+      ];
 }
 
 /// Class for holding text theme
@@ -593,13 +595,33 @@ class ColorTheme {
       stops: [0, 1],
     ),
     this.borderTop = const Effect(
-        sigmaX: 0, sigmaY: -1, color: Color(0xff000000), blur: 0, alpha: 0.08),
+      sigmaX: 0,
+      sigmaY: -1,
+      color: Color(0xff000000),
+      blur: 0,
+      alpha: 0.08,
+    ),
     this.borderBottom = const Effect(
-        sigmaX: 0, sigmaY: 1, color: Color(0xff000000), blur: 0, alpha: 0.08),
+      sigmaX: 0,
+      sigmaY: 1,
+      color: Color(0xff000000),
+      blur: 0,
+      alpha: 0.08,
+    ),
     this.shadowIconButton = const Effect(
-        sigmaX: 0, sigmaY: 2, color: Color(0xff000000), alpha: 0.5, blur: 4),
+      sigmaX: 0,
+      sigmaY: 2,
+      color: Color(0xff000000),
+      alpha: 0.5,
+      blur: 4,
+    ),
     this.modalShadow = const Effect(
-        sigmaX: 0, sigmaY: 0, color: Color(0xff000000), alpha: 1, blur: 8),
+      sigmaX: 0,
+      sigmaY: 0,
+      color: Color(0xff000000),
+      alpha: 1,
+      blur: 8,
+    ),
   }) : brightness = Brightness.light;
 
   /// Initialise with dark theme

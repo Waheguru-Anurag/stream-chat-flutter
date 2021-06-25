@@ -95,7 +95,7 @@ class FileAttachment extends AttachmentWidget {
     );
   }
 
-  ShapeBorder _getDefaultShape(BuildContext context) => RoundedRectangleBorder(
+  ShapeBorder _getDefaultShape() => RoundedRectangleBorder(
         side: const BorderSide(width: 0, color: Colors.transparent),
         borderRadius: BorderRadius.circular(8),
       );
@@ -105,7 +105,7 @@ class FileAttachment extends AttachmentWidget {
       return Material(
         clipBehavior: Clip.hardEdge,
         type: MaterialType.transparency,
-        shape: _getDefaultShape(context),
+        shape: _getDefaultShape(),
         child: source.when(
           local: () {
             if (attachment.file?.bytes == null) {
@@ -156,7 +156,7 @@ class FileAttachment extends AttachmentWidget {
       return Material(
         clipBehavior: Clip.hardEdge,
         type: MaterialType.transparency,
-        shape: _getDefaultShape(context),
+        shape: _getDefaultShape(),
         child: source.when(
           local: () => VideoThumbnailImage(
             fit: BoxFit.cover,

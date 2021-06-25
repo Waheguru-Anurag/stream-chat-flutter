@@ -69,9 +69,17 @@ class _ImageFooterState extends State<ImageFooter> {
   @override
   void initState() {
     super.initState();
-    _messageFocusNode.addListener(() {
-      setState(() {});
-    });
+    _messageFocusNode.addListener(_messageFocusListener);
+  }
+
+  void _messageFocusListener() {
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _messageFocusNode.removeListener(_messageFocusListener);
+    super.dispose();
   }
 
   @override
@@ -207,78 +215,9 @@ class _ImageFooterState extends State<ImageFooter> {
                   ],
                 ),
                 Flexible(
-                  child: GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: widget.mediaAttachments.length,
-                    padding: const EdgeInsets.all(1),
-                    // ignore: lines_longer_than_80_chars
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossAxisCount,
-                      mainAxisSpacing: 2,
-                      crossAxisSpacing: 2,
-                    ),
-                    itemBuilder: (context, index) {
-                      Widget media;
-                      final attachment = widget.mediaAttachments[index];
-                      if (attachment.type == 'video') {
-                        media = InkWell(
-                          onTap: () => widget.mediaSelectedCallBack!(index),
-                          child: FittedBox(
-                            fit: BoxFit.cover,
-                            child: VideoThumbnailImage(
-                              video: (attachment.file?.path ??
-                                  attachment.assetUrl)!,
-                            ),
-                          ),
-                        );
-                      } else {
-                        media = InkWell(
-                          onTap: () => widget.mediaSelectedCallBack!(index),
-                          child: AspectRatio(
-                            aspectRatio: 1,
-                            child: CachedNetworkImage(
-                              imageUrl: attachment.imageUrl ??
-                                  attachment.assetUrl ??
-                                  attachment.thumbUrl!,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        );
-                      }
-
-                      return Stack(
-                        children: [
-                          media,
-                          if (widget.message.user != null)
-                            Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: Container(
-                                clipBehavior: Clip.antiAlias,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.white.withOpacity(0.6),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      blurRadius: 8,
-                                      color: chatThemeData.colorTheme.black
-                                          .withOpacity(0.3),
-                                    ),
-                                  ],
-                                ),
-                                padding: const EdgeInsets.all(2),
-                                child: UserAvatar(
-                                  user: widget.message.user!,
-                                  constraints:
-                                      BoxConstraints.tight(const Size(24, 24)),
-                                  showOnlineStatus: false,
-                                ),
-                              ),
-                            ),
-                        ],
-                      );
-                    },
+                  child: _buildPhotosGrid(
+                    crossAxisCount,
+                    chatThemeData,
                   ),
                 ),
               ],
@@ -288,6 +227,77 @@ class _ImageFooterState extends State<ImageFooter> {
       },
     );
   }
+
+  GridView _buildPhotosGrid(
+    int crossAxisCount,
+    StreamChatThemeData chatThemeData,
+  ) =>
+      GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: widget.mediaAttachments.length,
+        padding: const EdgeInsets.all(1),
+        // ignore: lines_longer_than_80_chars
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          mainAxisSpacing: 2,
+          crossAxisSpacing: 2,
+        ),
+        itemBuilder: (context, index) {
+          Widget media;
+          final attachment = widget.mediaAttachments[index];
+          if (attachment.type == 'video') {
+            media = InkWell(
+              onTap: () => widget.mediaSelectedCallBack!(index),
+              child: FittedBox(
+                fit: BoxFit.cover,
+                child: VideoThumbnailImage(
+                  video: (attachment.file?.path ?? attachment.assetUrl)!,
+                ),
+              ),
+            );
+          } else {
+            media = InkWell(
+              onTap: () => widget.mediaSelectedCallBack!(index),
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: CachedNetworkImage(
+                  imageUrl: attachment.imageUrl ??
+                      attachment.assetUrl ??
+                      attachment.thumbUrl!,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            );
+          }
+
+          return Stack(
+            children: [
+              media,
+              if (widget.message.user != null)
+                Container(
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.6),
+                    boxShadow: [
+                      BoxShadow(
+                        blurRadius: 8,
+                        color: chatThemeData.colorTheme.black.withOpacity(0.3),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(10),
+                  child: UserAvatar(
+                    user: widget.message.user!,
+                    constraints: BoxConstraints.tight(const Size(24, 24)),
+                    showOnlineStatus: false,
+                  ),
+                ),
+            ],
+          );
+        },
+      );
 
   /// Sends the current message
   Future sendMessage() async {

@@ -107,7 +107,7 @@ class ReactionBubble extends StatelessWidget {
           bottom: 2,
           left: reverse ? null : 13,
           right: reverse ? 13 : null,
-          child: _buildReactionsTail(context),
+          child: _buildReactionsTail(),
         ),
       ],
     );
@@ -147,7 +147,7 @@ class ReactionBubble extends StatelessWidget {
     );
   }
 
-  Widget _buildReactionsTail(BuildContext context) {
+  Widget _buildReactionsTail() {
     final tail = CustomPaint(
       painter: ReactionBubblePainter(
         backgroundColor,
@@ -194,20 +194,20 @@ class ReactionBubblePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    _drawOvalMask(size, canvas);
+    _drawOvalMask(canvas);
 
-    _drawMask(size, canvas);
+    _drawMask(canvas);
 
-    _drawOval(size, canvas);
+    _drawOval(canvas);
 
-    _drawOvalBorder(size, canvas);
+    _drawOvalBorder(canvas);
 
-    _drawArc(size, canvas);
+    _drawArc(canvas);
 
-    _drawBorder(size, canvas);
+    _drawBorder(canvas);
   }
 
-  void _drawOvalMask(Size size, Canvas canvas) {
+  void _drawOvalMask(Canvas canvas) {
     final paint = Paint()
       ..color = maskColor
       ..style = PaintingStyle.fill;
@@ -224,7 +224,7 @@ class ReactionBubblePainter extends CustomPainter {
     canvas.drawPath(path, paint);
   }
 
-  void _drawOvalBorder(Size size, Canvas canvas) {
+  void _drawOvalBorder(Canvas canvas) {
     final paint = Paint()
       ..color = borderColor
       ..strokeWidth = 1
@@ -242,7 +242,7 @@ class ReactionBubblePainter extends CustomPainter {
     canvas.drawPath(path, paint);
   }
 
-  void _drawOval(Size size, Canvas canvas) {
+  void _drawOval(Canvas canvas) {
     final paint = Paint()
       ..color = color
       ..strokeWidth = 1;
@@ -257,7 +257,7 @@ class ReactionBubblePainter extends CustomPainter {
     canvas.drawPath(path, paint);
   }
 
-  void _drawBorder(Size size, Canvas canvas) {
+  void _drawBorder(Canvas canvas) {
     final paint = Paint()
       ..color = borderColor
       ..strokeWidth = 1
@@ -278,7 +278,7 @@ class ReactionBubblePainter extends CustomPainter {
     canvas.drawPath(path, paint);
   }
 
-  void _drawArc(Size size, Canvas canvas) {
+  void _drawArc(Canvas canvas) {
     final paint = Paint()
       ..color = color
       ..strokeWidth = 1;
@@ -298,7 +298,7 @@ class ReactionBubblePainter extends CustomPainter {
     canvas.drawPath(path, paint);
   }
 
-  void _drawMask(Size size, Canvas canvas) {
+  void _drawMask(Canvas canvas) {
     final paint = Paint()
       ..color = maskColor
       ..strokeWidth = 1

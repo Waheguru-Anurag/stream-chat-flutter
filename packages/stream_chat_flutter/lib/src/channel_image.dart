@@ -95,25 +95,25 @@ class ChannelImage extends StatelessWidget {
           final otherMember = channel.state?.members
               .firstWhere((member) => member.user?.id != streamChat.user?.id);
           return BetterStreamBuilder<User?>(
-              stream: streamChat.client.state.usersStream
-                  .map((users) =>
-                      users[otherMember?.userId] ?? otherMember!.user!)
-                  .distinct(),
-              initialData: otherMember!.user,
-              builder: (context, user) => UserAvatar(
-                    borderRadius: borderRadius ??
-                        chatThemeData
-                            .channelPreviewTheme.avatarTheme?.borderRadius,
-                    user: user ?? otherMember.user!,
-                    constraints: constraints ??
-                        chatThemeData
-                            .channelPreviewTheme.avatarTheme?.constraints,
-                    onTap: onTap != null ? (_) => onTap!() : null,
-                    selected: selected,
-                    selectionColor:
-                        selectionColor ?? chatThemeData.colorTheme.accentBlue,
-                    selectionThickness: selectionThickness,
-                  ));
+            stream: streamChat.client.state.usersStream
+                .map(
+                  (users) => users[otherMember?.userId] ?? otherMember!.user!,
+                )
+                .distinct(),
+            initialData: otherMember!.user,
+            builder: (context, user) => UserAvatar(
+              borderRadius: borderRadius ??
+                  chatThemeData.channelPreviewTheme.avatarTheme?.borderRadius,
+              user: user ?? otherMember.user!,
+              constraints: constraints ??
+                  chatThemeData.channelPreviewTheme.avatarTheme?.constraints,
+              onTap: onTap != null ? (_) => onTap!() : null,
+              selected: selected,
+              selectionColor:
+                  selectionColor ?? chatThemeData.colorTheme.accentBlue,
+              selectionThickness: selectionThickness,
+            ),
+          );
         } else {
           final images = channel.state?.members
               .where((member) =>

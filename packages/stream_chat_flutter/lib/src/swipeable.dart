@@ -76,7 +76,7 @@ class _SwipeableState extends State<Swipeable> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  void _handleDragStart(DragStartDetails details) {
+  void _handleDragStart(DragStartDetails _) {
     if (widget.onSwipeStart != null) {
       widget.onSwipeStart!();
     }
@@ -121,7 +121,7 @@ class _SwipeableState extends State<Swipeable> with TickerProviderStateMixin {
     _moveController.value = newPos;
   }
 
-  void _handleDragEnd(DragEndDetails details) {
+  void _handleDragEnd(DragEndDetails _) {
     _moveController.animateTo(0, duration: _animationDuration);
     _iconMoveController.animateTo(0, duration: _animationDuration);
     _dragExtent = 0.0;

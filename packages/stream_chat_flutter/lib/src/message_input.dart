@@ -234,8 +234,8 @@ class MessageInput extends StatefulWidget {
 
     if (messageInputState == null) {
       throw Exception(
-          // ignore: lines_longer_than_80_chars
-          'You must have a MessageInput widget as ancestor of your widget tree');
+        'You must have a MessageInput widget as ancestor of your widget tree',
+      );
     }
 
     return messageInputState;
@@ -293,15 +293,19 @@ class MessageInputState extends State<MessageInput> {
       _parseExistingMessage(widget.editMessage ?? widget.initialMessage!);
     }
 
-    textEditingController.addListener(() {
-      _onChanged(context, textEditingController.text);
-    });
+    textEditingController.addListener(_onChangeListener);
 
-    _focusNode.addListener(() {
-      if (_focusNode.hasFocus) {
-        _openFilePickerSection = false;
-      }
-    });
+    _focusNode.addListener(_focusNodeListener);
+  }
+
+  void _focusNodeListener() {
+    if (_focusNode.hasFocus) {
+      _openFilePickerSection = false;
+    }
+  }
+
+  void _onChangeListener() {
+    _onChanged(context, textEditingController.text);
   }
 
   @override
@@ -351,7 +355,7 @@ class MessageInputState extends State<MessageInput> {
                 ),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
-                child: _buildTextField(context),
+                child: _buildTextField(),
               ),
               if (widget.parentMessage != null && !widget.hideSendAsDm)
                 Padding(
@@ -377,18 +381,18 @@ class MessageInputState extends State<MessageInput> {
     return child;
   }
 
-  Flex _buildTextField(BuildContext context) => Flex(
+  Flex _buildTextField() => Flex(
         direction: Axis.horizontal,
         children: <Widget>[
           if (!_commandEnabled &&
               widget.actionsLocation == ActionsLocation.left)
             _buildExpandActionsButton(),
-          _buildTextInput(context),
+          _buildTextInput(),
           if (!_commandEnabled &&
               widget.actionsLocation == ActionsLocation.right)
             _buildExpandActionsButton(),
           if (widget.sendButtonLocation == SendButtonLocation.outside)
-            _animateSendButton(context),
+            _animateSendButton(),
         ],
       );
 
@@ -449,19 +453,19 @@ class MessageInputState extends State<MessageInput> {
         ],
       );
 
-  Widget _animateSendButton(BuildContext context) {
+  Widget _animateSendButton() {
     final sendButton = widget.activeSendButton != null
         ? InkWell(
             onTap: sendMessage,
             child: widget.activeSendButton,
           )
-        : _buildSendButton(context);
+        : _buildSendButton();
     return AnimatedCrossFade(
       crossFadeState: (_messageIsPresent || _attachments.isNotEmpty)
           ? CrossFadeState.showFirst
           : CrossFadeState.showSecond,
       firstChild: sendButton,
-      secondChild: widget.idleSendButton ?? _buildIdleSendButton(context),
+      secondChild: widget.idleSendButton ?? _buildIdleSendButton(),
       duration: _streamChatTheme.messageInputTheme.sendAnimationDuration!,
       alignment: Alignment.center,
     );
@@ -521,7 +525,7 @@ class MessageInputState extends State<MessageInput> {
     );
   }
 
-  Expanded _buildTextInput(BuildContext context) {
+  Expanded _buildTextInput() {
     final margin = (widget.sendButtonLocation == SendButtonLocation.inside
             ? const EdgeInsets.only(right: 8)
             : EdgeInsets.zero) +
@@ -567,7 +571,7 @@ class MessageInputState extends State<MessageInput> {
                     decoration: _getInputDecoration(),
                     textCapitalization: TextCapitalization.sentences,
                   ),
-                )
+                ),
               ],
             ),
           ),
@@ -611,38 +615,7 @@ class MessageInputState extends State<MessageInput> {
       ),
       contentPadding: const EdgeInsets.fromLTRB(16, 12, 13, 11),
       prefixIcon: _commandEnabled
-          ? Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Container(
-                    constraints: BoxConstraints.tight(const Size(64, 24)),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      color: _streamChatTheme.colorTheme.accentBlue,
-                    ),
-                    alignment: Alignment.center,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        StreamSvgIcon.lightning(
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                        Text(
-                          _chosenCommand?.name.toUpperCase() ?? '',
-                          style:
-                              _streamChatTheme.textTheme.footnoteBold.copyWith(
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            )
+          ? _buildCommandChip()
           : (widget.actionsLocation == ActionsLocation.leftInside
               ? Row(
                   mainAxisSize: MainAxisSize.min,
@@ -657,30 +630,57 @@ class MessageInputState extends State<MessageInput> {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (_commandEnabled)
-            Padding(
+            IconButton(
               padding: const EdgeInsets.only(right: 8),
-              child: IconButton(
-                icon: StreamSvgIcon.closeSmall(),
-                splashRadius: 24,
-                padding: const EdgeInsets.all(0),
-                constraints: const BoxConstraints.tightFor(
-                  height: 24,
-                  width: 24,
-                ),
-                onPressed: () {
-                  setState(() => _commandEnabled = false);
-                },
+              icon: StreamSvgIcon.closeSmall(),
+              splashRadius: 24,
+              constraints: const BoxConstraints.tightFor(
+                height: 24,
+                width: 24,
               ),
+              onPressed: () {
+                setState(() => _commandEnabled = false);
+              },
             ),
           if (!_commandEnabled &&
               widget.actionsLocation == ActionsLocation.rightInside)
             _buildExpandActionsButton(),
           if (widget.sendButtonLocation == SendButtonLocation.inside)
-            _animateSendButton(context),
+            _animateSendButton(),
         ],
       ),
     ).merge(passedDecoration);
   }
+
+  Row _buildCommandChip() => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            constraints: BoxConstraints.tight(const Size(64, 24)),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: _streamChatTheme.colorTheme.accentBlue,
+            ),
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                StreamSvgIcon.lightning(
+                  color: Colors.white,
+                  size: 16,
+                ),
+                Text(
+                  _chosenCommand?.name.toUpperCase() ?? '',
+                  style: _streamChatTheme.textTheme.footnoteBold.copyWith(
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
 
   Timer? _debounce;
 
@@ -839,8 +839,9 @@ class MessageInputState extends State<MessageInput> {
         child: Container(
           constraints: BoxConstraints.loose(const Size.fromHeight(400)),
           decoration: BoxDecoration(
-              color: _streamChatTheme.colorTheme.white,
-              borderRadius: BorderRadius.circular(8)),
+            color: _streamChatTheme.colorTheme.white,
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: ListView(
             padding: const EdgeInsets.all(0),
             shrinkWrap: true,
@@ -864,7 +865,7 @@ class MessageInputState extends State<MessageInput> {
                           color:
                               _streamChatTheme.colorTheme.black.withOpacity(.5),
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -873,45 +874,7 @@ class MessageInputState extends State<MessageInput> {
               ),
               ...commands
                   .map(
-                    (c) => InkWell(
-                      onTap: () {
-                        _setCommand(c);
-                      },
-                      child: SizedBox(
-                        height: 40,
-                        child: Row(
-                          children: [
-                            const SizedBox(
-                              width: 16,
-                            ),
-                            _buildCommandIcon(c.name),
-                            const SizedBox(
-                              width: 8,
-                            ),
-                            Text.rich(
-                              TextSpan(
-                                text: c.name.capitalize(),
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
-                                children: [
-                                  TextSpan(
-                                    text: '   /${c.name} ${c.args}',
-                                    style: _streamChatTheme.textTheme.body
-                                        .copyWith(
-                                      // ignore: lines_longer_than_80_chars
-                                      color: _streamChatTheme
-                                          // ignore: lines_longer_than_80_chars
-                                          .colorTheme
-                                          .grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                    _buildCommandTile,
                   )
                   .toList(),
             ],
@@ -920,54 +883,93 @@ class MessageInputState extends State<MessageInput> {
       ),
     );
     return OverlayEntry(
-        builder: (context) => Positioned(
-              bottom: size.height + MediaQuery.of(context).viewInsets.bottom,
-              left: 0,
-              right: 0,
-              child: TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: 1),
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOutExpo,
-                builder: (context, val, child) => Transform.scale(
-                  scale: val,
-                  child: child,
-                ),
-                child: child,
+      builder: (context) => Positioned(
+        bottom: size.height + MediaQuery.of(context).viewInsets.bottom,
+        left: 0,
+        right: 0,
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: 1),
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOutExpo,
+          builder: (context, val, child) => Transform.scale(
+            scale: val,
+            child: child,
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  InkWell _buildCommandTile(Command c) => InkWell(
+        onTap: () {
+          _setCommand(c);
+        },
+        child: SizedBox(
+          height: 40,
+          child: Row(
+            children: [
+              const SizedBox(
+                width: 16,
               ),
-            ));
+              _buildCommandIcon(c.name),
+              const SizedBox(
+                width: 8,
+              ),
+              Text.rich(
+                TextSpan(
+                  text: c.name.capitalize(),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: '   /${c.name} ${c.args}',
+                      style: _streamChatTheme.textTheme.body.copyWith(
+                        // ignore: lines_longer_than_80_chars
+                        color: _streamChatTheme
+                            // ignore: lines_longer_than_80_chars
+                            .colorTheme
+                            .grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+  Color _getIconColor(int index, bool attachmentContainsFile) {
+    switch (index) {
+      case 0:
+        return _attachments.isEmpty
+            ? _streamChatTheme.colorTheme.accentBlue
+            : (!attachmentContainsFile
+                ? _streamChatTheme.colorTheme.accentBlue
+                : _streamChatTheme.colorTheme.black.withOpacity(0.2));
+      case 1:
+        return attachmentContainsFile
+            ? _streamChatTheme.colorTheme.accentBlue
+            : (_attachments.isEmpty
+                ? _streamChatTheme.colorTheme.black.withOpacity(0.5)
+                : _streamChatTheme.colorTheme.black.withOpacity(0.2));
+      case 2:
+        return attachmentContainsFile && _attachments.isNotEmpty
+            ? _streamChatTheme.colorTheme.black.withOpacity(0.2)
+            : _streamChatTheme.colorTheme.black.withOpacity(0.5);
+      case 3:
+        return attachmentContainsFile && _attachments.isNotEmpty
+            ? _streamChatTheme.colorTheme.black.withOpacity(0.2)
+            : _streamChatTheme.colorTheme.black.withOpacity(0.5);
+      default:
+        return Colors.black;
+    }
   }
 
   Widget _buildFilePickerSection() {
     final _attachmentContainsFile =
         _attachments.values.any((it) => it.type == 'file');
-
-    Color _getIconColor(int index) {
-      final streamChatThemeData = _streamChatTheme;
-      switch (index) {
-        case 0:
-          return _attachments.isEmpty
-              ? streamChatThemeData.colorTheme.accentBlue
-              : (!_attachmentContainsFile
-                  ? streamChatThemeData.colorTheme.accentBlue
-                  : streamChatThemeData.colorTheme.black.withOpacity(0.2));
-        case 1:
-          return _attachmentContainsFile
-              ? streamChatThemeData.colorTheme.accentBlue
-              : (_attachments.isEmpty
-                  ? streamChatThemeData.colorTheme.black.withOpacity(0.5)
-                  : streamChatThemeData.colorTheme.black.withOpacity(0.2));
-        case 2:
-          return _attachmentContainsFile && _attachments.isNotEmpty
-              ? streamChatThemeData.colorTheme.black.withOpacity(0.2)
-              : streamChatThemeData.colorTheme.black.withOpacity(0.5);
-        case 3:
-          return _attachmentContainsFile && _attachments.isNotEmpty
-              ? streamChatThemeData.colorTheme.black.withOpacity(0.2)
-              : streamChatThemeData.colorTheme.black.withOpacity(0.5);
-        default:
-          return Colors.black;
-      }
-    }
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -977,54 +979,7 @@ class MessageInputState extends State<MessageInput> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              children: [
-                IconButton(
-                  icon: StreamSvgIcon.pictures(
-                    color: _getIconColor(0),
-                  ),
-                  onPressed: _attachmentContainsFile && _attachments.isNotEmpty
-                      ? null
-                      : () {
-                          setState(() {
-                            _filePickerIndex = 0;
-                          });
-                        },
-                ),
-                IconButton(
-                  iconSize: 32,
-                  icon: StreamSvgIcon.files(
-                    color: _getIconColor(1),
-                  ),
-                  onPressed: !_attachmentContainsFile && _attachments.isNotEmpty
-                      ? null
-                      : () {
-                          pickFile(DefaultAttachmentTypes.file);
-                        },
-                ),
-                IconButton(
-                  icon: StreamSvgIcon.camera(
-                    color: _getIconColor(2),
-                  ),
-                  onPressed: _attachmentContainsFile && _attachments.isNotEmpty
-                      ? null
-                      : () {
-                          pickFile(DefaultAttachmentTypes.image, true);
-                        },
-                ),
-                IconButton(
-                  padding: const EdgeInsets.all(0),
-                  icon: StreamSvgIcon.record(
-                    color: _getIconColor(3),
-                  ),
-                  onPressed: _attachmentContainsFile && _attachments.isNotEmpty
-                      ? null
-                      : () {
-                          pickFile(DefaultAttachmentTypes.video, true);
-                        },
-                ),
-              ],
-            ),
+            _buildButtonRow(_attachmentContainsFile),
             GestureDetector(
               onVerticalDragUpdate: (update) {
                 setState(() {
@@ -1090,6 +1045,55 @@ class MessageInputState extends State<MessageInput> {
       ),
     );
   }
+
+  Row _buildButtonRow(bool _attachmentContainsFile) => Row(
+        children: [
+          IconButton(
+            icon: StreamSvgIcon.pictures(
+              color: _getIconColor(0, _attachmentContainsFile),
+            ),
+            onPressed: _attachmentContainsFile && _attachments.isNotEmpty
+                ? null
+                : () {
+                    setState(() {
+                      _filePickerIndex = 0;
+                    });
+                  },
+          ),
+          IconButton(
+            iconSize: 32,
+            icon: StreamSvgIcon.files(
+              color: _getIconColor(1, _attachmentContainsFile),
+            ),
+            onPressed: !_attachmentContainsFile && _attachments.isNotEmpty
+                ? null
+                : () {
+                    pickFile(DefaultAttachmentTypes.file);
+                  },
+          ),
+          IconButton(
+            icon: StreamSvgIcon.camera(
+              color: _getIconColor(2, _attachmentContainsFile),
+            ),
+            onPressed: _attachmentContainsFile && _attachments.isNotEmpty
+                ? null
+                : () {
+                    pickFile(DefaultAttachmentTypes.image, camera: true);
+                  },
+          ),
+          IconButton(
+            padding: const EdgeInsets.all(0),
+            icon: StreamSvgIcon.record(
+              color: _getIconColor(3, _attachmentContainsFile),
+            ),
+            onPressed: _attachmentContainsFile && _attachments.isNotEmpty
+                ? null
+                : () {
+                    pickFile(DefaultAttachmentTypes.video, camera: true);
+                  },
+          ),
+        ],
+      );
 
   void _addAttachment(AssetEntity medium) async {
     final mediaFile = await medium.originFile.timeout(
@@ -1242,9 +1246,7 @@ class MessageInputState extends State<MessageInput> {
       return null;
     }
 
-    // ignore: cast_nullable_to_non_nullable
-    final renderBox = context.findRenderObject() as RenderBox;
-    final size = renderBox.size;
+    final size = context.size!;
     final child = Card(
       margin: const EdgeInsets.all(8),
       elevation: 2,
@@ -1271,34 +1273,7 @@ class MessageInputState extends State<MessageInput> {
               ...snapshot.data!
                   .where((it) => it.user != null)
                   .map(
-                    (m) => Material(
-                      color: _streamChatTheme.colorTheme.white,
-                      child: InkWell(
-                        onTap: () {
-                          if (m.user != null) {
-                            _mentionedUsers.add(m.user!);
-                          }
-
-                          splits[splits.length - 1] = m.user!.name;
-                          final rejoin = splits.join('@');
-
-                          textEditingController.value = TextEditingValue(
-                            text: rejoin +
-                                textEditingController.text.substring(
-                                    textEditingController.selection.start),
-                            selection: TextSelection.collapsed(
-                              offset: rejoin.length,
-                            ),
-                          );
-                          _debounce!.cancel();
-                          _mentionsOverlay?.remove();
-                          _mentionsOverlay = null;
-                        },
-                        child: widget.mentionsTileBuilder != null
-                            ? widget.mentionsTileBuilder!(context, m)
-                            : MentionTile(m),
-                      ),
-                    ),
+                    (m) => _buildMentionTile(m, splits, context),
                   )
                   .toList(),
               const SizedBox(
@@ -1328,6 +1303,41 @@ class MessageInputState extends State<MessageInput> {
     );
   }
 
+  Material _buildMentionTile(
+    Member m,
+    List<String> splits,
+    BuildContext context,
+  ) =>
+      Material(
+        color: _streamChatTheme.colorTheme.white,
+        child: InkWell(
+          onTap: () {
+            if (m.user != null) {
+              _mentionedUsers.add(m.user!);
+            }
+
+            splits[splits.length - 1] = m.user!.name;
+            final rejoin = splits.join('@');
+
+            textEditingController.value = TextEditingValue(
+              text: rejoin +
+                  textEditingController.text.substring(
+                    textEditingController.selection.start,
+                  ),
+              selection: TextSelection.collapsed(
+                offset: rejoin.length,
+              ),
+            );
+            _debounce!.cancel();
+            _mentionsOverlay?.remove();
+            _mentionsOverlay = null;
+          },
+          child: widget.mentionsTileBuilder != null
+              ? widget.mentionsTileBuilder!(context, m)
+              : MentionTile(m),
+        ),
+      );
+
   OverlayEntry? _buildEmojiOverlay() {
     final splits = textEditingController.text
         .substring(0, textEditingController.value.selection.start)
@@ -1347,92 +1357,102 @@ class MessageInputState extends State<MessageInput> {
       return null;
     }
 
-    // ignore: cast_nullable_to_non_nullable
-    final renderBox = context.findRenderObject() as RenderBox;
-    final size = renderBox.size;
+    final size = context.size!;
 
     return OverlayEntry(
-        builder: (context) => Positioned(
-              bottom: size.height + MediaQuery.of(context).viewInsets.bottom,
-              left: 0,
-              right: 0,
-              child: Card(
-                margin: const EdgeInsets.all(8),
-                elevation: 2,
-                color: _streamChatTheme.colorTheme.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+      builder: (context) => Positioned(
+        bottom: size.height + MediaQuery.of(context).viewInsets.bottom,
+        left: 0,
+        right: 0,
+        child: Card(
+          margin: const EdgeInsets.all(8),
+          elevation: 2,
+          color: _streamChatTheme.colorTheme.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          clipBehavior: Clip.hardEdge,
+          child: Container(
+            constraints: BoxConstraints.loose(const Size.fromHeight(200)),
+            decoration: BoxDecoration(
+              boxShadow: const [
+                BoxShadow(
+                  spreadRadius: -8,
+                  blurRadius: 5,
+                  offset: Offset(0, -4),
                 ),
-                clipBehavior: Clip.hardEdge,
-                child: Container(
-                  constraints: BoxConstraints.loose(const Size.fromHeight(200)),
-                  decoration: BoxDecoration(
-                    boxShadow: const [
-                      BoxShadow(
-                        spreadRadius: -8,
-                        blurRadius: 5,
-                        offset: Offset(0, -4),
-                      ),
-                    ],
-                    color: _streamChatTheme.colorTheme.white,
-                  ),
-                  child: ListView.builder(
-                      padding: const EdgeInsets.all(0),
-                      shrinkWrap: true,
-                      itemCount: emojis.length + 1,
-                      itemBuilder: (context, i) {
-                        if (i == 0) {
-                          return Padding(
-                            padding: const EdgeInsets.only(left: 8, top: 8),
-                            child: Row(
-                              children: [
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(horizontal: 8),
-                                  child: StreamSvgIcon.smile(
-                                    color:
-                                        _streamChatTheme.colorTheme.accentBlue,
-                                  ),
-                                ),
-                                Flexible(
-                                  child: Text(
-                                    'Emoji matching "$query"',
-                                    style: TextStyle(
-                                      color: _streamChatTheme.colorTheme.black
-                                          .withOpacity(.5),
-                                    ),
-                                  ),
-                                )
-                              ],
-                            ),
-                          );
-                        }
+              ],
+              color: _streamChatTheme.colorTheme.white,
+            ),
+            child: ListView.builder(
+              padding: const EdgeInsets.all(0),
+              shrinkWrap: true,
+              itemCount: emojis.length + 1,
+              itemBuilder: (context, i) => _buildEmojiTile(
+                i,
+                query,
+                emojis,
+                context,
+                splits,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
-                        final emoji = emojis.elementAt(i - 1)!;
-                        final themeData = Theme.of(context);
-                        return ListTile(
-                          title: SubstringHighlight(
-                            text:
-                                // ignore: lines_longer_than_80_chars
-                                "${emoji.char} ${emoji.name!.replaceAll('_', ' ')}",
-                            term: query,
-                            textStyleHighlight:
-                                themeData.textTheme.headline6!.copyWith(
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textStyle: themeData.textTheme.headline6!.copyWith(
-                              fontSize: 14.5,
-                            ),
-                          ),
-                          onTap: () {
-                            _chooseEmoji(splits, emoji);
-                          },
-                        );
-                      }),
+  Widget _buildEmojiTile(
+    int i,
+    String query,
+    Iterable<Emoji?> emojis,
+    BuildContext context,
+    List<String> splits,
+  ) {
+    if (i == 0) {
+      return Padding(
+        padding: const EdgeInsets.only(left: 8, top: 8),
+        child: Row(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: StreamSvgIcon.smile(
+                color: _streamChatTheme.colorTheme.accentBlue,
+              ),
+            ),
+            Flexible(
+              child: Text(
+                'Emoji matching "$query"',
+                style: TextStyle(
+                  color: _streamChatTheme.colorTheme.black.withOpacity(.5),
                 ),
               ),
-            ));
+            ),
+          ],
+        ),
+      );
+    }
+
+    final emoji = emojis.elementAt(i - 1)!;
+    final themeData = Theme.of(context);
+    return ListTile(
+      title: SubstringHighlight(
+        text:
+            // ignore: lines_longer_than_80_chars
+            "${emoji.char} ${emoji.name!.replaceAll('_', ' ')}",
+        term: query,
+        textStyleHighlight: themeData.textTheme.headline6!.copyWith(
+          fontSize: 14.5,
+          fontWeight: FontWeight.bold,
+        ),
+        textStyle: themeData.textTheme.headline6!.copyWith(
+          fontSize: 14.5,
+        ),
+      ),
+      onTap: () {
+        _chooseEmoji(splits, emoji);
+      },
+    );
   }
 
   void _chooseEmoji(List<String> splits, Emoji emoji) {
@@ -1732,70 +1752,71 @@ class MessageInputState extends State<MessageInput> {
       });
     } else {
       showModalBottomSheet(
-          clipBehavior: Clip.hardEdge,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(32),
-              topRight: Radius.circular(32),
-            ),
+        clipBehavior: Clip.hardEdge,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(32),
+            topRight: Radius.circular(32),
           ),
-          context: context,
-          isScrollControlled: true,
-          builder: (_) => Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  const ListTile(
-                    title: Text(
-                      'Add a file',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.image),
-                    title: const Text('Upload a photo'),
-                    onTap: () {
-                      pickFile(DefaultAttachmentTypes.image);
-                      Navigator.pop(context);
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.video_library),
-                    title: const Text('Upload a video'),
-                    onTap: () {
-                      pickFile(DefaultAttachmentTypes.video);
-                      Navigator.pop(context);
-                    },
-                  ),
-                  if (!kIsWeb)
-                    ListTile(
-                      leading: const Icon(Icons.camera_alt),
-                      title: const Text('Photo from camera'),
-                      onTap: () {
-                        pickFile(DefaultAttachmentTypes.image, true);
-                        Navigator.pop(context);
-                      },
-                    ),
-                  if (!kIsWeb)
-                    ListTile(
-                      leading: const Icon(Icons.videocam),
-                      title: const Text('Video from camera'),
-                      onTap: () {
-                        pickFile(DefaultAttachmentTypes.video, true);
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ListTile(
-                    leading: const Icon(Icons.insert_drive_file),
-                    title: const Text('Upload a file'),
-                    onTap: () {
-                      pickFile(DefaultAttachmentTypes.file);
-                      Navigator.pop(context);
-                    },
-                  ),
-                ],
-              ));
+        ),
+        context: context,
+        isScrollControlled: true,
+        builder: (_) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const ListTile(
+              title: Text(
+                'Add a file',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.image),
+              title: const Text('Upload a photo'),
+              onTap: () {
+                pickFile(DefaultAttachmentTypes.image);
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.video_library),
+              title: const Text('Upload a video'),
+              onTap: () {
+                pickFile(DefaultAttachmentTypes.video);
+                Navigator.pop(context);
+              },
+            ),
+            if (!kIsWeb)
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Photo from camera'),
+                onTap: () {
+                  pickFile(DefaultAttachmentTypes.image, camera: true);
+                  Navigator.pop(context);
+                },
+              ),
+            if (!kIsWeb)
+              ListTile(
+                leading: const Icon(Icons.videocam),
+                title: const Text('Video from camera'),
+                onTap: () {
+                  pickFile(DefaultAttachmentTypes.video, camera: true);
+                  Navigator.pop(context);
+                },
+              ),
+            ListTile(
+              leading: const Icon(Icons.insert_drive_file),
+              title: const Text('Upload a file'),
+              onTap: () {
+                pickFile(DefaultAttachmentTypes.file);
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      );
     }
   }
 
@@ -1811,8 +1832,10 @@ class MessageInputState extends State<MessageInput> {
 
   /// Pick a file from the device
   /// If [camera] is true then the camera will open
-  // ignore: avoid_positional_boolean_parameters
-  void pickFile(DefaultAttachmentTypes fileType, [bool camera = false]) async {
+  void pickFile(
+    DefaultAttachmentTypes fileType, {
+    bool camera = false,
+  }) async {
     setState(() => _inputEnabled = false);
 
     AttachmentFile? file;
@@ -1843,21 +1866,7 @@ class MessageInputState extends State<MessageInput> {
         bytes: bytes,
       );
     } else {
-      late FileType type;
-      if (fileType == DefaultAttachmentTypes.image) {
-        type = FileType.image;
-      } else if (fileType == DefaultAttachmentTypes.video) {
-        type = FileType.video;
-      } else if (fileType == DefaultAttachmentTypes.file) {
-        type = FileType.any;
-      }
-      final res = await FilePicker.platform.pickFiles(
-        type: type,
-        withData: true,
-      );
-      if (res?.files.isNotEmpty == true) {
-        file = res!.files.single.toAttachmentFile;
-      }
+      file = await _pickFromGallery(fileType);
     }
 
     setState(() => _inputEnabled = true);
@@ -1911,16 +1920,37 @@ class MessageInputState extends State<MessageInput> {
 
     setState(() {
       _attachments.update(
-          attachment.id,
-          (it) => it.copyWith(
-                file: file,
-                extraData: {...it.extraData}
-                  ..update('file_size', ((_) => file!.size!)),
-              ));
+        attachment.id,
+        (it) => it.copyWith(
+          file: file,
+          extraData: {...it.extraData}
+            ..update('file_size', ((_) => file!.size!)),
+        ),
+      );
     });
   }
 
-  Widget _buildIdleSendButton(BuildContext context) => Padding(
+  Future<AttachmentFile?> _pickFromGallery(
+    DefaultAttachmentTypes fileType,
+  ) async {
+    late FileType type;
+    if (fileType == DefaultAttachmentTypes.image) {
+      type = FileType.image;
+    } else if (fileType == DefaultAttachmentTypes.video) {
+      type = FileType.video;
+    } else if (fileType == DefaultAttachmentTypes.file) {
+      type = FileType.any;
+    }
+    final res = await FilePicker.platform.pickFiles(
+      type: type,
+      withData: true,
+    );
+    if (res?.files.isNotEmpty == true) {
+      return res!.files.single.toAttachmentFile;
+    }
+  }
+
+  Widget _buildIdleSendButton() => Padding(
         padding: const EdgeInsets.all(8),
         child: StreamSvgIcon(
           assetName: _getIdleSendIcon(),
@@ -1928,20 +1958,16 @@ class MessageInputState extends State<MessageInput> {
         ),
       );
 
-  Widget _buildSendButton(BuildContext context) => Padding(
-        padding: const EdgeInsets.all(8),
-        child: IconButton(
-          onPressed: sendMessage,
-          padding: const EdgeInsets.all(0),
-          splashRadius: 24,
-          constraints: const BoxConstraints.tightFor(
-            height: 24,
-            width: 24,
-          ),
-          icon: StreamSvgIcon(
-            assetName: _getSendIcon(),
-            color: _streamChatTheme.messageInputTheme.sendButtonColor,
-          ),
+  Widget _buildSendButton() => IconButton(
+        onPressed: sendMessage,
+        splashRadius: 24,
+        constraints: const BoxConstraints.tightFor(
+          height: 24,
+          width: 24,
+        ),
+        icon: StreamSvgIcon(
+          assetName: _getSendIcon(),
+          color: _streamChatTheme.messageInputTheme.sendButtonColor,
         ),
       );
 
@@ -2061,10 +2087,11 @@ class MessageInputState extends State<MessageInput> {
       backgroundColor: _streamChatTheme.colorTheme.white,
       context: context,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-        topLeft: Radius.circular(16),
-        topRight: Radius.circular(16),
-      )),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(16),
+          topRight: Radius.circular(16),
+        ),
+      ),
       builder: (context) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -2131,6 +2158,8 @@ class MessageInputState extends State<MessageInput> {
 
   @override
   void dispose() {
+    textEditingController.removeListener(_onChangeListener);
+    _focusNode.removeListener(_focusNodeListener);
     _commandsOverlay?.remove();
     _emojiOverlay?.remove();
     _mentionsOverlay?.remove();
@@ -2236,74 +2265,76 @@ class __PickerWidgetState extends State<_PickerWidget> {
       return const Offstage();
     }
     return FutureBuilder<bool>(
-        future: requestPermission,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      future: requestPermission,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-          if (snapshot.data!) {
-            if (widget.containsFile) {
-              return GestureDetector(
-                onTap: () {
-                  widget.onAddMoreFilesClick(DefaultAttachmentTypes.file);
-                },
-                child: Container(
-                  constraints: const BoxConstraints.expand(),
-                  color: widget.streamChatTheme.colorTheme.whiteSmoke,
-                  alignment: Alignment.center,
+        if (snapshot.data!) {
+          if (widget.containsFile) {
+            return GestureDetector(
+              onTap: () {
+                widget.onAddMoreFilesClick(DefaultAttachmentTypes.file);
+              },
+              child: Container(
+                constraints: const BoxConstraints.expand(),
+                color: widget.streamChatTheme.colorTheme.whiteSmoke,
+                alignment: Alignment.center,
+                child: Text(
+                  'Add more files',
+                  style: TextStyle(
+                    color: widget.streamChatTheme.colorTheme.accentBlue,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            );
+          }
+          return MediaListView(
+            selectedIds: widget.selectedMedias,
+            onSelect: widget.onMediaSelected,
+          );
+        }
+
+        return InkWell(
+          onTap: () async {
+            PhotoManager.openSetting();
+          },
+          child: Container(
+            color: widget.streamChatTheme.colorTheme.whiteSmoke,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SvgPicture.asset(
+                  'svgs/icon_picture_empty_state.svg',
+                  package: 'stream_chat_flutter',
+                  height: 140,
+                  color: widget.streamChatTheme.colorTheme.greyGainsboro,
+                ),
+                Text(
+                  // ignore: lines_longer_than_80_chars
+                  'Please enable access to your photos \nand videos so you can share them with friends.',
+                  style: widget.streamChatTheme.textTheme.body.copyWith(
+                    color: widget.streamChatTheme.colorTheme.grey,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 6),
+                Center(
                   child: Text(
-                    'Add more files',
-                    style: TextStyle(
+                    'Allow access to your gallery',
+                    style: widget.streamChatTheme.textTheme.bodyBold.copyWith(
                       color: widget.streamChatTheme.colorTheme.accentBlue,
-                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-              );
-            }
-            return MediaListView(
-              selectedIds: widget.selectedMedias,
-              onSelect: widget.onMediaSelected,
-            );
-          }
-
-          return InkWell(
-            onTap: () async {
-              PhotoManager.openSetting();
-            },
-            child: Container(
-              color: widget.streamChatTheme.colorTheme.whiteSmoke,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SvgPicture.asset(
-                    'svgs/icon_picture_empty_state.svg',
-                    package: 'stream_chat_flutter',
-                    height: 140,
-                    color: widget.streamChatTheme.colorTheme.greyGainsboro,
-                  ),
-                  Text(
-                    // ignore: lines_longer_than_80_chars
-                    'Please enable access to your photos \nand videos so you can share them with friends.',
-                    style: widget.streamChatTheme.textTheme.body.copyWith(
-                        color: widget.streamChatTheme.colorTheme.grey),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 6),
-                  Center(
-                    child: Text(
-                      'Allow access to your gallery',
-                      style: widget.streamChatTheme.textTheme.bodyBold.copyWith(
-                        color: widget.streamChatTheme.colorTheme.accentBlue,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              ],
             ),
-          );
-        });
+          ),
+        );
+      },
+    );
   }
 }

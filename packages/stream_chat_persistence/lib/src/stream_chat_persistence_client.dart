@@ -3,7 +3,6 @@ import 'package:logging/logging.dart' show LogRecord;
 import 'package:meta/meta.dart';
 import 'package:mutex/mutex.dart';
 import 'package:stream_chat/stream_chat.dart';
-
 import 'package:stream_chat_persistence/src/db/moor_chat_database.dart';
 
 /// Various connection modes on which [StreamChatPersistenceClient] can work
@@ -229,7 +228,7 @@ class StreamChatPersistenceClient extends ChatPersistenceClient {
         final parentId = message.parentId!;
         messageByParentIdDictionary[parentId] = [
           ...messageByParentIdDictionary[parentId] ?? [],
-          message
+          message,
         ];
       }
       return messageByParentIdDictionary;

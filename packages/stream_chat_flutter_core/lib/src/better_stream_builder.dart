@@ -88,6 +88,7 @@ class _BetterStreamBuilderState<T> extends State<BetterStreamBuilder<T>> {
   void _onError(error) {
     if (widget.errorBuilder != null && error != _lastError) {
       if (mounted) {
+        // ignore: no-empty-block
         setState(() {});
       }
       _lastError = error;

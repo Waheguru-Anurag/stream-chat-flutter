@@ -71,74 +71,9 @@ class _ChannelBottomSheetState extends State<ChannelBottomSheet> {
                   height: 17,
                 ),
                 if (channel.isDistinct && channel.memberCount == 2)
-                  Column(
-                    children: [
-                      UserAvatar(
-                        user: members
-                            .firstWhere(
-                                (e) => e.user?.id != userAsMember.user?.id)
-                            .user!,
-                        constraints: const BoxConstraints(
-                          maxHeight: 64,
-                          maxWidth: 64,
-                        ),
-                        borderRadius: BorderRadius.circular(32),
-                        onlineIndicatorConstraints:
-                            BoxConstraints.tight(const Size(12, 12)),
-                      ),
-                      const SizedBox(
-                        height: 6,
-                      ),
-                      Text(
-                        members
-                                .firstWhere(
-                                    (e) => e.user?.id != userAsMember.user?.id)
-                                .user
-                                ?.name ??
-                            '',
-                        style: _streamChatThemeData.textTheme.footnoteBold,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
+                  _buildDmHeader(members, userAsMember),
                 if (!(channel.isDistinct && channel.memberCount == 2))
-                  Container(
-                    height: 94,
-                    alignment: Alignment.center,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: members.length,
-                      shrinkWrap: true,
-                      itemBuilder: (context, index) => Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Column(
-                          children: [
-                            UserAvatar(
-                              user: members[index].user!,
-                              constraints: const BoxConstraints.tightFor(
-                                height: 64,
-                                width: 64,
-                              ),
-                              borderRadius: BorderRadius.circular(32),
-                              onlineIndicatorConstraints:
-                                  BoxConstraints.tight(const Size(12, 12)),
-                            ),
-                            const SizedBox(
-                              height: 6,
-                            ),
-                            Text(
-                              members[index].user?.name ?? '',
-                              style:
-                                  _streamChatThemeData.textTheme.footnoteBold,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                  _buildGroupHeader(members),
                 const SizedBox(
                   height: 24,
                 ),
@@ -161,15 +96,7 @@ class _ChannelBottomSheetState extends State<ChannelBottomSheet> {
                       ),
                     ),
                     title: 'Leave Group',
-                    onTap: () async {
-                      setState(() {
-                        _showActions = false;
-                      });
-                      await _showLeaveDialog();
-                      setState(() {
-                        _showActions = true;
-                      });
-                    },
+                    onTap: _onLeaveGroupTap,
                   ),
                 if (isOwner)
                   OptionListTile(
@@ -181,15 +108,7 @@ class _ChannelBottomSheetState extends State<ChannelBottomSheet> {
                     ),
                     title: 'Delete Conversation',
                     titleColor: _streamChatThemeData.colorTheme.accentRed,
-                    onTap: () async {
-                      setState(() {
-                        _showActions = false;
-                      });
-                      await _showDeleteDialog();
-                      setState(() {
-                        _showActions = true;
-                      });
-                    },
+                    onTap: _onDeleteConversationTap,
                   ),
                 OptionListTile(
                   leading: Padding(
@@ -207,6 +126,96 @@ class _ChannelBottomSheetState extends State<ChannelBottomSheet> {
             ),
     );
   }
+
+  void _onDeleteConversationTap() async {
+    setState(() {
+      _showActions = false;
+    });
+    await _showDeleteDialog();
+    setState(() {
+      _showActions = true;
+    });
+  }
+
+  void _onLeaveGroupTap() async {
+    setState(() {
+      _showActions = false;
+    });
+    await _showLeaveDialog();
+    setState(() {
+      _showActions = true;
+    });
+  }
+
+  Container _buildGroupHeader(List<Member> members) => Container(
+        height: 94,
+        alignment: Alignment.center,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: members.length,
+          shrinkWrap: true,
+          itemBuilder: (context, index) => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Column(
+              children: [
+                UserAvatar(
+                  user: members[index].user!,
+                  constraints: const BoxConstraints.tightFor(
+                    height: 64,
+                    width: 64,
+                  ),
+                  borderRadius: BorderRadius.circular(32),
+                  onlineIndicatorConstraints:
+                      BoxConstraints.tight(const Size(12, 12)),
+                ),
+                const SizedBox(
+                  height: 6,
+                ),
+                Text(
+                  members[index].user?.name ?? '',
+                  style: _streamChatThemeData.textTheme.footnoteBold,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+  Column _buildDmHeader(List<Member> members, Member userAsMember) => Column(
+        children: [
+          UserAvatar(
+            user: members
+                .firstWhere(
+                  (e) => e.user?.id != userAsMember.user?.id,
+                )
+                .user!,
+            constraints: const BoxConstraints(
+              maxHeight: 64,
+              maxWidth: 64,
+            ),
+            borderRadius: BorderRadius.circular(32),
+            onlineIndicatorConstraints:
+                BoxConstraints.tight(const Size(12, 12)),
+          ),
+          const SizedBox(
+            height: 6,
+          ),
+          Text(
+            members
+                    .firstWhere(
+                      (e) => e.user?.id != userAsMember.user?.id,
+                    )
+                    .user
+                    ?.name ??
+                '',
+            style: _streamChatThemeData.textTheme.footnoteBold,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      );
 
   @override
   void didChangeDependencies() {

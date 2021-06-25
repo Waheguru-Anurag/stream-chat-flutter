@@ -3,7 +3,6 @@ import 'package:stream_chat/stream_chat.dart';
 import 'package:stream_chat_persistence/src/db/moor_chat_database.dart';
 import 'package:stream_chat_persistence/src/entity/pinned_messages.dart';
 import 'package:stream_chat_persistence/src/entity/users.dart';
-
 import 'package:stream_chat_persistence/src/mapper/mapper.dart';
 
 part 'pinned_message_dao.g.dart';
@@ -62,8 +61,10 @@ class PinnedMessageDao extends DatabaseAccessor<MoorChatDatabase>
   Future<Message?> getMessageById(String id) async =>
       await (select(pinnedMessages).join([
         leftOuterJoin(_users, pinnedMessages.userId.equalsExp(_users.id)),
-        leftOuterJoin(_pinnedByUsers,
-            pinnedMessages.pinnedByUserId.equalsExp(_pinnedByUsers.id)),
+        leftOuterJoin(
+          _pinnedByUsers,
+          pinnedMessages.pinnedByUserId.equalsExp(_pinnedByUsers.id),
+        ),
       ])
             ..where(pinnedMessages.id.equals(id)))
           .map(_messageFromJoinRow)
@@ -74,8 +75,10 @@ class PinnedMessageDao extends DatabaseAccessor<MoorChatDatabase>
   Future<List<Message>> getThreadMessages(String cid) async =>
       Future.wait(await (select(pinnedMessages).join([
         leftOuterJoin(_users, pinnedMessages.userId.equalsExp(_users.id)),
-        leftOuterJoin(_pinnedByUsers,
-            pinnedMessages.pinnedByUserId.equalsExp(_pinnedByUsers.id)),
+        leftOuterJoin(
+          _pinnedByUsers,
+          pinnedMessages.pinnedByUserId.equalsExp(_pinnedByUsers.id),
+        ),
       ])
             ..where(pinnedMessages.channelCid.equals(cid))
             ..where(pinnedMessages.parentId.isNotNull())
@@ -91,8 +94,10 @@ class PinnedMessageDao extends DatabaseAccessor<MoorChatDatabase>
   }) async {
     final msgList = await Future.wait(await (select(pinnedMessages).join([
       leftOuterJoin(_users, pinnedMessages.userId.equalsExp(_users.id)),
-      leftOuterJoin(_pinnedByUsers,
-          pinnedMessages.pinnedByUserId.equalsExp(_pinnedByUsers.id)),
+      leftOuterJoin(
+        _pinnedByUsers,
+        pinnedMessages.pinnedByUserId.equalsExp(_pinnedByUsers.id),
+      ),
     ])
           ..where(pinnedMessages.parentId.isNotNull())
           ..where(pinnedMessages.parentId.equals(parentId))
@@ -132,8 +137,10 @@ class PinnedMessageDao extends DatabaseAccessor<MoorChatDatabase>
   }) async {
     final msgList = await Future.wait(await (select(pinnedMessages).join([
       leftOuterJoin(_users, pinnedMessages.userId.equalsExp(_users.id)),
-      leftOuterJoin(_pinnedByUsers,
-          pinnedMessages.pinnedByUserId.equalsExp(_pinnedByUsers.id)),
+      leftOuterJoin(
+        _pinnedByUsers,
+        pinnedMessages.pinnedByUserId.equalsExp(_pinnedByUsers.id),
+      ),
     ])
           ..where(pinnedMessages.channelCid.equals(cid))
           ..where(pinnedMessages.parentId.isNull() |

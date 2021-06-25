@@ -266,7 +266,7 @@ class _UserListViewState extends State<UserListView>
               if (widget.separatorBuilder != null) {
                 return widget.separatorBuilder!(context, index);
               }
-              return _separatorBuilder(context, index);
+              return _separatorBuilder(context);
             },
             itemBuilder: (context, index) =>
                 _listItemBuilder(context, index, items),
@@ -288,7 +288,7 @@ class _UserListViewState extends State<UserListView>
   }
 
   Widget _listItemBuilder(BuildContext context, int i, List<ListItem> items) {
-    final usersProvider = UsersBloc.of(context);
+    final usersBloc = UsersBloc.of(context);
     if (i < items.length) {
       final item = items[i];
       return item.when(
@@ -327,12 +327,12 @@ class _UserListViewState extends State<UserListView>
         },
       );
     } else {
-      return _buildQueryProgressIndicator(context, usersProvider);
+      return _buildQueryProgressIndicator(usersBloc);
     }
   }
 
   Widget _gridItemBuilder(BuildContext context, int i, List<ListItem> items) {
-    final usersProvider = UsersBloc.of(context);
+    final usersBloc = UsersBloc.of(context);
     if (i < items.length) {
       final item = items[i];
       return item.when(
@@ -383,41 +383,42 @@ class _UserListViewState extends State<UserListView>
         },
       );
     } else {
-      return _buildQueryProgressIndicator(context, usersProvider);
+      return _buildQueryProgressIndicator(usersBloc);
     }
   }
 
-  Widget _buildQueryProgressIndicator(context, UsersBlocState usersProvider) =>
+  Widget _buildQueryProgressIndicator(UsersBlocState usersBloc) =>
       StreamBuilder<bool>(
-          stream: usersProvider.queryUsersLoading,
-          initialData: false,
-          builder: (context, snapshot) {
-            if (snapshot.hasError) {
-              return Container(
-                color: StreamChatTheme.of(context)
-                    .colorTheme
-                    .accentRed
-                    .withOpacity(.2),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Center(
-                    child: Text('Error loading users'),
-                  ),
-                ),
-              );
-            }
+        stream: usersBloc.queryUsersLoading,
+        initialData: false,
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
             return Container(
-              height: 100,
-              padding: const EdgeInsets.all(32),
-              child: Center(
-                child: snapshot.data!
-                    ? const CircularProgressIndicator()
-                    : Container(),
+              color: StreamChatTheme.of(context)
+                  .colorTheme
+                  .accentRed
+                  .withOpacity(.2),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                  child: Text('Error loading users'),
+                ),
               ),
             );
-          });
+          }
+          return Container(
+            height: 100,
+            padding: const EdgeInsets.all(32),
+            child: Center(
+              child: snapshot.data!
+                  ? const CircularProgressIndicator()
+                  : Container(),
+            ),
+          );
+        },
+      );
 
-  Widget _separatorBuilder(context, i) => Container(
+  Widget _separatorBuilder(context) => Container(
         height: 1,
         color: StreamChatTheme.of(context).colorTheme.greyWhisper,
       );
