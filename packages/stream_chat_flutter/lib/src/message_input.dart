@@ -124,32 +124,34 @@ const _kDefaultMaxAttachmentSize = 20971520; // 20MB in Bytes
 /// Modify it to change the widget appearance.
 class MessageInput extends StatefulWidget {
   /// Instantiate a new MessageInput
-  const MessageInput({
-    Key? key,
-    this.onMessageSent,
-    this.preMessageSending,
-    this.parentMessage,
-    this.editMessage,
-    this.maxHeight = 150,
-    this.keyboardType = TextInputType.multiline,
-    this.disableAttachments = false,
-    this.initialMessage,
-    this.textEditingController,
-    this.actions,
-    this.actionsLocation = ActionsLocation.left,
-    this.attachmentThumbnailBuilders,
-    this.focusNode,
-    this.quotedMessage,
-    this.onQuotedMessageCleared,
-    this.sendButtonLocation = SendButtonLocation.outside,
-    this.autofocus = false,
-    this.hideSendAsDm = false,
-    this.idleSendButton,
-    this.activeSendButton,
-    this.showCommandsButton = true,
-    this.mentionsTileBuilder,
-    this.maxAttachmentSize = _kDefaultMaxAttachmentSize,
-  }) : super(key: key);
+  const MessageInput(
+      {Key? key,
+      this.onMessageSent,
+      this.preMessageSending,
+      this.parentMessage,
+      this.editMessage,
+      this.maxHeight = 150,
+      this.keyboardType = TextInputType.multiline,
+      this.disableAttachments = false,
+      this.initialMessage,
+      this.textEditingController,
+      this.actions,
+      this.actionsLocation = ActionsLocation.left,
+      this.attachmentThumbnailBuilders,
+      this.focusNode,
+      this.quotedMessage,
+      this.onQuotedMessageCleared,
+      this.sendButtonLocation = SendButtonLocation.outside,
+      this.autofocus = false,
+      this.hideSendAsDm = false,
+      this.idleSendButton,
+      this.activeSendButton,
+      this.showCommandsButton = true,
+      this.mentionsTileBuilder,
+      this.maxAttachmentSize = _kDefaultMaxAttachmentSize,
+      this.isMenuButton = false,
+      this.menuButton = const Offstage()})
+      : super(key: key);
 
   /// Message to edit
   final Message? editMessage;
@@ -219,6 +221,10 @@ class MessageInput extends StatefulWidget {
 
   /// Send button widget in an active state
   final Widget? activeSendButton;
+
+  final bool isMenuButton;
+
+  final Widget menuButton;
 
   /// Customize the tile for the mentions overlay
   final MentionTileBuilder? mentionsTileBuilder;
@@ -377,20 +383,22 @@ class MessageInputState extends State<MessageInput> {
     return child;
   }
 
-  Flex _buildTextField(BuildContext context) => Flex(
-        direction: Axis.horizontal,
-        children: <Widget>[
-          if (!_commandEnabled &&
-              widget.actionsLocation == ActionsLocation.left)
-            _buildExpandActionsButton(),
-          _buildTextInput(context),
-          if (!_commandEnabled &&
-              widget.actionsLocation == ActionsLocation.right)
-            _buildExpandActionsButton(),
-          if (widget.sendButtonLocation == SendButtonLocation.outside)
-            _animateSendButton(context),
-        ],
-      );
+  Flex _buildTextField(BuildContext context) {
+    return Flex(
+      direction: Axis.horizontal,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        if (widget.isMenuButton) widget.menuButton,
+        if (!_commandEnabled && widget.actionsLocation == ActionsLocation.left)
+          _buildExpandActionsButton(),
+        _buildTextInput(context),
+        if (!_commandEnabled && widget.actionsLocation == ActionsLocation.right)
+          _buildExpandActionsButton(),
+        if (widget.sendButtonLocation == SendButtonLocation.outside)
+          _animateSendButton(context),
+      ],
+    );
+  }
 
   Widget _buildDmCheckbox() => Row(
         children: [
