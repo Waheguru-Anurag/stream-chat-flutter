@@ -155,39 +155,44 @@ const _kDefaultMaxAttachmentSize = 20971520; // 20MB in Bytes
 /// Modify it to change the widget appearance.
 class MessageInput extends StatefulWidget {
   /// Instantiate a new MessageInput
-  const MessageInput({
-    Key? key,
-    this.onMessageSent,
-    this.preMessageSending,
-    this.parentMessage,
-    this.editMessage,
-    this.maxHeight = 150,
-    this.keyboardType = TextInputType.multiline,
-    this.disableAttachments = false,
-    this.initialMessage,
-    this.textEditingController,
-    this.actions,
-    this.actionsLocation = ActionsLocation.left,
-    this.attachmentThumbnailBuilders,
-    this.focusNode,
-    this.quotedMessage,
-    this.onQuotedMessageCleared,
-    this.sendButtonLocation = SendButtonLocation.outside,
-    this.autofocus = false,
-    this.hideSendAsDm = false,
-    this.idleSendButton,
-    this.activeSendButton,
-    this.showCommandsButton = true,
-    this.mentionsTileBuilder,
-    this.maxAttachmentSize = _kDefaultMaxAttachmentSize,
-    this.compressedVideoQuality = VideoQuality.DefaultQuality,
-    this.compressedVideoFrameRate = 30,
-    this.onError,
-    this.attachmentLimit = 10,
-    this.onAttachmentLimitExceed,
-    this.attachmentButtonBuilder,
-    this.commandButtonBuilder,
-  })  : assert(
+  const MessageInput(
+      {Key? key,
+      this.onMessageSent,
+      this.preMessageSending,
+      this.parentMessage,
+      this.editMessage,
+      this.maxHeight = 150,
+      this.keyboardType = TextInputType.multiline,
+      this.disableAttachments = false,
+      this.initialMessage,
+      this.textEditingController,
+      this.actions,
+      this.actionsLocation = ActionsLocation.left,
+      this.attachmentThumbnailBuilders,
+      this.focusNode,
+      this.quotedMessage,
+      this.onQuotedMessageCleared,
+      this.sendButtonLocation = SendButtonLocation.outside,
+      this.autofocus = false,
+      this.hideSendAsDm = false,
+      this.idleSendButton,
+      this.activeSendButton,
+      this.showCommandsButton = true,
+      this.mentionsTileBuilder,
+      this.maxAttachmentSize = _kDefaultMaxAttachmentSize,
+      this.compressedVideoQuality = VideoQuality.DefaultQuality,
+      this.compressedVideoFrameRate = 30,
+      this.onError,
+      this.attachmentLimit = 10,
+      this.onAttachmentLimitExceed,
+      this.attachmentButtonBuilder,
+      this.commandButtonBuilder,
+      this.isMenuButton = false,
+      this.menuButton = const Offstage(),
+      this.textInputBackgroundColor = Colors.white,
+      this.textInputContentPadding = const EdgeInsets.fromLTRB(16, 12, 13, 11),
+      this.messageInputElevation = 8.0})
+      : assert(
           initialMessage == null || editMessage == null,
           "Can't provide both `initialMessage` and `editMessage`",
         ),
@@ -267,6 +272,21 @@ class MessageInput extends StatefulWidget {
 
   /// Send button widget in an active state
   final Widget? activeSendButton;
+
+  /// Should Menu Button be displayed
+  final bool isMenuButton;
+
+  /// Menu Button Action Widget
+  final Widget menuButton;
+
+  /// Text Input Custom Background Color
+  final Color textInputBackgroundColor;
+
+  /// Text Input Custom Content Padding
+  final EdgeInsetsGeometry textInputContentPadding;
+
+  /// Message Input Widget Elevation
+  final double messageInputElevation;
 
   /// Customize the tile for the mentions overlay
   final MentionTileBuilder? mentionsTileBuilder;
@@ -465,7 +485,7 @@ class MessageInputState extends State<MessageInput> {
     );
     if (widget.editMessage == null) {
       child = Material(
-        elevation: 8,
+        elevation: widget.messageInputElevation,
         child: child,
       );
     }
@@ -474,6 +494,7 @@ class MessageInputState extends State<MessageInput> {
 
   Flex _buildTextField(BuildContext context) => Flex(
         direction: Axis.horizontal,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           if (!_commandEnabled &&
               widget.actionsLocation == ActionsLocation.left)
@@ -644,7 +665,7 @@ class MessageInputState extends State<MessageInput> {
           child: DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: _messageInputTheme.borderRadius,
-              color: _messageInputTheme.inputBackgroundColor,
+              color: widget.textInputBackgroundColor,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -710,46 +731,48 @@ class MessageInputState extends State<MessageInput> {
           color: Colors.transparent,
         ),
       ),
-      contentPadding: const EdgeInsets.fromLTRB(16, 12, 13, 11),
-      prefixIcon: _commandEnabled
-          ? Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Container(
-                    constraints: BoxConstraints.tight(const Size(64, 24)),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      color: _streamChatTheme.colorTheme.accentPrimary,
-                    ),
-                    alignment: Alignment.center,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        StreamSvgIcon.lightning(
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                        Text(
-                          _chosenCommand?.name.toUpperCase() ?? '',
-                          style:
-                              _streamChatTheme.textTheme.footnoteBold.copyWith(
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            )
-          : (widget.actionsLocation == ActionsLocation.leftInside
+      contentPadding: widget.textInputContentPadding,
+      prefixIcon: widget.isMenuButton
+          ? widget.menuButton
+          : _commandEnabled
               ? Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: [_buildExpandActionsButton(context)],
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Container(
+                        constraints: BoxConstraints.tight(const Size(64, 24)),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: _streamChatTheme.colorTheme.accentPrimary,
+                        ),
+                        alignment: Alignment.center,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            StreamSvgIcon.lightning(
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                            Text(
+                              _chosenCommand?.name.toUpperCase() ?? '',
+                              style: _streamChatTheme.textTheme.footnoteBold
+                                  .copyWith(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 )
-              : null),
+              : (widget.actionsLocation == ActionsLocation.leftInside
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [_buildExpandActionsButton(context)],
+                    )
+                  : null),
       suffixIconConstraints: const BoxConstraints.tightFor(height: 40),
       prefixIconConstraints: const BoxConstraints.tightFor(height: 40),
       suffixIcon: Row(
