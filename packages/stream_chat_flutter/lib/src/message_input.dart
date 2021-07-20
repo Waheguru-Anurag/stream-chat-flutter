@@ -335,7 +335,7 @@ class MessageInput extends StatefulWidget {
 
 /// State of [MessageInput]
 class MessageInputState extends State<MessageInput> {
-  late final Map<String, Attachment> _attachments;
+  final Map<String, Attachment> _attachments = <String, Attachment>{};
   final List<User> _mentionedUsers = [];
 
   final _imagePicker = ImagePicker();
