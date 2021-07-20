@@ -335,7 +335,7 @@ class MessageInput extends StatefulWidget {
 
 /// State of [MessageInput]
 class MessageInputState extends State<MessageInput> {
-  late final Map<String, Attachment>? _attachments;
+  late final Map<String, Attachment> _attachments;
   final List<User> _mentionedUsers = [];
 
   final _imagePicker = ImagePicker();
@@ -370,7 +370,9 @@ class MessageInputState extends State<MessageInput> {
     _emojiNames =
         Emoji.all().where((it) => it.name != null).map((e) => e.name!);
 
-    _attachments = widget.attachments;
+    if (widget.attachments != null) {
+      _attachments.addAll(widget.attachments!);
+    }
 
     if (!kIsWeb) {
       _keyboardListener =
@@ -424,6 +426,16 @@ class MessageInputState extends State<MessageInput> {
   }
 
   void _stopSlowMode() => _slowModeTimer?.cancel();
+
+  @override
+  void didUpdateWidget(MessageInput oldWidget) {
+    if (widget.attachments != oldWidget.attachments) {
+      if (widget.attachments != null) {
+        _attachments.addAll(widget.attachments!);
+      }
+    }
+    super.didUpdateWidget(oldWidget);
+  }
 
   @override
   Widget build(BuildContext context) {
