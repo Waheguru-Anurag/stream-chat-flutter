@@ -158,45 +158,47 @@ const _kDefaultMaxAttachmentSize = 20971520; // 20MB in Bytes
 /// Modify it to change the widget appearance.
 class MessageInput extends StatefulWidget {
   /// Instantiate a new MessageInput
-  const MessageInput({
-    Key? key,
-    this.onMessageSent,
-    this.preMessageSending,
-    this.parentMessage,
-    this.editMessage,
-    this.maxHeight = 150,
-    this.keyboardType = TextInputType.multiline,
-    this.disableAttachments = false,
-    this.initialMessage,
-    this.textEditingController,
-    this.actions,
-    this.actionsLocation = ActionsLocation.left,
-    this.attachmentThumbnailBuilders,
-    this.focusNode,
-    this.quotedMessage,
-    this.onQuotedMessageCleared,
-    this.sendButtonLocation = SendButtonLocation.outside,
-    this.autofocus = false,
-    this.hideSendAsDm = false,
-    this.idleSendButton,
-    this.activeSendButton,
-    this.showCommandsButton = true,
-    this.mentionsTileBuilder,
-    this.maxAttachmentSize = _kDefaultMaxAttachmentSize,
-    this.compressedVideoQuality = VideoQuality.DefaultQuality,
-    this.compressedVideoFrameRate = 30,
-    this.onError,
-    this.attachmentLimit = 10,
-    this.onAttachmentLimitExceed,
-    this.attachmentButtonBuilder,
-    this.commandButtonBuilder,
-    this.isMenuButton = false,
-    this.menuButton = const Offstage(),
-    this.textInputBackgroundColor = Colors.white,
-    this.textInputContentPadding = const EdgeInsets.fromLTRB(16, 12, 13, 11),
-    this.messageInputElevation = 8.0,
-    this.attachments = const <String, Attachment>{},
-  })  : assert(
+  const MessageInput(
+      {Key? key,
+      this.onMessageSent,
+      this.preMessageSending,
+      this.parentMessage,
+      this.editMessage,
+      this.maxHeight = 150,
+      this.keyboardType = TextInputType.multiline,
+      this.disableAttachments = false,
+      this.initialMessage,
+      this.textEditingController,
+      this.actions,
+      this.actionsLocation = ActionsLocation.left,
+      this.attachmentThumbnailBuilders,
+      this.focusNode,
+      this.quotedMessage,
+      this.onQuotedMessageCleared,
+      this.sendButtonLocation = SendButtonLocation.outside,
+      this.autofocus = false,
+      this.hideSendAsDm = false,
+      this.idleSendButton,
+      this.activeSendButton,
+      this.showCommandsButton = true,
+      this.mentionsTileBuilder,
+      this.maxAttachmentSize = _kDefaultMaxAttachmentSize,
+      this.compressedVideoQuality = VideoQuality.DefaultQuality,
+      this.compressedVideoFrameRate = 30,
+      this.onError,
+      this.attachmentLimit = 10,
+      this.onAttachmentLimitExceed,
+      this.attachmentButtonBuilder,
+      this.commandButtonBuilder,
+      this.isMenuButton = false,
+      this.menuButton = const Offstage(),
+      this.textInputBackgroundColor = Colors.white,
+      this.textInputContentPadding = const EdgeInsets.fromLTRB(16, 12, 13, 11),
+      this.messageInputElevation = 8.0,
+      this.attachments = const <String, Attachment>{},
+      this.onTap,
+      this.inputEnabled = false})
+      : assert(
           initialMessage == null || editMessage == null,
           "Can't provide both `initialMessage` and `editMessage`",
         ),
@@ -321,6 +323,12 @@ class MessageInput extends StatefulWidget {
   /// Add Custom Attachments
   final Map<String, Attachment>? attachments;
 
+  /// Customize onTap Behaviour of MessageInput
+  final void Function()? onTap;
+
+  /// Customize enabled Behaviour of MessageInput TextField
+  final bool inputEnabled;
+
   @override
   MessageInputState createState() => MessageInputState();
 
@@ -395,6 +403,8 @@ class MessageInputState extends State<MessageInput> {
     textEditingController.addListener(() {
       _onChanged(context, textEditingController.text);
     });
+
+    _inputEnabled = widget.inputEnabled;
 
     _focusNode.addListener(() {
       if (_focusNode.hasFocus) {
@@ -700,6 +710,7 @@ class MessageInputState extends State<MessageInput> {
                     key: const Key('messageInputText'),
                     enabled: _inputEnabled,
                     maxLines: null,
+                    onTap: widget.onTap,
                     onSubmitted: (_) => sendMessage(),
                     keyboardType: widget.keyboardType,
                     controller: textEditingController,
@@ -791,7 +802,9 @@ class MessageInputState extends State<MessageInput> {
               : (widget.actionsLocation == ActionsLocation.leftInside
                   ? Row(
                       mainAxisSize: MainAxisSize.min,
-                      children: [_buildExpandActionsButton(context)],
+                      children: [
+                        _buildExpandActionsButton(context),
+                      ],
                     )
                   : null),
       suffixIconConstraints: const BoxConstraints.tightFor(height: 40),
