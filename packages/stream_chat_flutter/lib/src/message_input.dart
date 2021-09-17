@@ -705,7 +705,8 @@ class MessageInputState extends State<MessageInput> {
                   maxHeight: widget.maxHeight,
                   child: TextField(
                     key: const Key('messageInputText'),
-                    enabled: _inputEnabled,
+                    readOnly: !_inputEnabled,
+                    enabled: true,
                     maxLines: null,
                     onTap: widget.onTap,
                     onSubmitted: (_) => sendMessage(),
